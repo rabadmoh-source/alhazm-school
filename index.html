@@ -43,7 +43,7 @@ body.service-expanded #fullView{display:none!important}
 <div class="grid4"><div class="stat"><strong id="students">—</strong><span>عدد الطلبة</span></div><div class="stat"><strong id="parents">—</strong><span>أولياء الأمور</span></div><div class="stat"><strong id="classes">—</strong><span>الشعب الدراسية</span></div><div class="stat"><strong id="svcCount">3</strong><span>خدمات مفعّلة</span></div></div>
 <section><div class="titleline"><h2>📢 مستجداتنا</h2><p>الإعلانات والخدمات الجديدة</p></div><div id="notice" class="notice"></div></section>
 <section><div class="titleline"><div><h2>خدماتنا الرقمية</h2><p>ثلاث خدمات تعمل الآن، مع مساحة لإضافة خدمات جديدة لاحقًا</p></div><input id="search" class="search" placeholder="🔎 ابحث عن خدمة..." aria-label="ابحث عن خدمة"></div><div id="filters" class="filters"><button class="chip active" data-filter="all">جميع الخدمات</button><button class="chip" data-filter="teachers">الهيئة التعليمية</button><button class="chip" data-filter="admin">الإدارة</button><button class="chip" data-filter="parents">أولياء الأمور</button><button class="chip" data-filter="favorites">★ المفضلة</button></div><div id="services" class="services"></div></section>
-<section><div class="hint">معلومة: تعمل الخدمات المفعّلة من الملفات المرفقة بهذه البوابة. عند نقل البوابة لجهاز آخر، انقلي المجلد كاملًا مع ملفات الخدمة، ولا تنقلي ملف الصفحة الرئيسية وحده. تُحفظ التغييرات في كل خدمة محليًا داخل متصفحها، ولا تتزامن تلقائيًا بين الأجهزة.</div></section><section id="embeddedService" class="hide" aria-label="الخدمة المفتوحة" style="margin:10px 0 25px"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px"><button class="btn primary" id="returnPortal">↩ العودة إلى البوابة</button><strong id="serviceHeading"></strong><div id="hazmCloudLinks" class="hazm-cloud-links hide" aria-label="السجلات السحابية للزيارات الإشرافية"><a class="btn hazm-cloud-link" href="https://moeom.sharepoint.com/sites/alhazm-digital/Lists/List/AllItems.aspx" target="_blank" rel="noopener noreferrer" title="يفتح SharePoint في تبويب جديد بعد تسجيل الدخول بالحساب المصرح له">☁ فتح سجل الزيارات السحابي ↗</a><a class="btn hazm-cloud-link hazm-cloud-link-secondary" href="https://moeom.sharepoint.com/sites/alhazm-digital/Lists/List1/AllItems.aspx" target="_blank" rel="noopener noreferrer" title="يفتح SharePoint في تبويب جديد بعد تسجيل الدخول بالحساب المصرح له">☁ فتح سجل التوصيات السحابي ↗</a></div><button class="btn" id="fullView">عرض الصفحة الكاملة</button></div><iframe id="serviceFrame" title="خدمة مدرسة الحزم" style="width:100%;height:78vh;min-height:580px;border:1px solid #d8d4ea;border-radius:16px;background:white" allow="autoplay"></iframe><div class="hint" style="margin-top:10px">لضمان عمل الروابط، تم تضمين الخدمة داخل الملف نفسه. تُحفظ التعديلات محليًا في هذا المتصفح؛ استخدمي النسخة الاحتياطية في كل خدمة.</div></section></main>
+<section><div class="hint">معلومة: تعمل الخدمات المفعّلة من الملفات المرفقة بهذه البوابة. عند نقل البوابة لجهاز آخر، انقلي المجلد كاملًا مع ملفات الخدمة، ولا تنقلي ملف الصفحة الرئيسية وحده. تُحفظ التغييرات في كل خدمة محليًا داخل متصفحها، ولا تتزامن تلقائيًا بين الأجهزة.</div></section><section id="embeddedService" class="hide" aria-label="الخدمة المفتوحة" style="margin:10px 0 25px"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px"><button class="btn primary" id="returnPortal">↩ العودة إلى البوابة</button><strong id="serviceHeading"></strong><div id="hazmCloudLinks" class="hazm-cloud-links hide" aria-label="روابط سجلات SharePoint المعتمدة"></div><button class="btn" id="fullView">عرض الصفحة الكاملة</button></div><iframe id="serviceFrame" title="خدمة مدرسة الحزم" style="width:100%;height:78vh;min-height:580px;border:1px solid #d8d4ea;border-radius:16px;background:white" allow="autoplay"></iframe><div class="hint" style="margin-top:10px">لضمان عمل الروابط، تم تضمين الخدمة داخل الملف نفسه. تُحفظ التعديلات محليًا في هذا المتصفح؛ استخدمي النسخة الاحتياطية في كل خدمة.</div></section></main>
 <footer>بوابة الحزم الرقمية · مدرسة الحزم للتعليم الأساسي (١–٤) · التقنية في خدمة التعليم وصناعة الأثر</footer>
 <div id="shade" class="modalshade"><div class="modal" role="dialog" aria-modal="true"><h2>إعدادات بوابة الحزم</h2><p class="small">هذه الإعدادات تُحفظ على هذا الجهاز والمتصفح فقط؛ ولا تؤثر في البوابة لدى بقية المستخدمين.</p><label class="field" for="st">عدد الطلبة</label><input class="fieldinp" type="number" min="0" id="st" placeholder="اتركيه فارغًا إن لم يتوفر العدد"><label class="field" for="pa">أولياء الأمور</label><input class="fieldinp" type="number" min="0" id="pa" placeholder="اتركيه فارغًا إن لم يتوفر العدد"><label class="field" for="cl">عدد الشعب</label><input class="fieldinp" type="number" min="0" id="cl" placeholder="اتركيه فارغًا إن لم يتوفر العدد"><label class="field" for="nw">نص المستجدات</label><textarea class="fieldinp" id="nw" rows="4"></textarea><div class="bar"><button class="btn primary" id="save">حفظ</button><button class="btn" id="cancel">إلغاء</button><button class="btn" id="reset">استعادة الافتراضي</button></div></div></div>
 
@@ -80,7 +80,30 @@ function openService(s){
  document.querySelector('.grid4').classList.add('hide');
  const view=document.getElementById('embeddedService');view.classList.remove('hide');document.body.classList.add('service-expanded');
  document.getElementById('serviceHeading').textContent=s.name;
- document.getElementById('hazmCloudLinks').classList.toggle('hide',s.id!=='monitor');
+ // روابط السجلات السحابية: تنقل فقط إلى SharePoint ولا تغيّر بيانات أي خدمة.
+ const cloudLists={
+  compass:[['متابعة الخطة المدرسية','List2']],
+  pd:[['متابعة الإنماء المهني','List3']],
+  family:[['التواصل والشراكة المجتمعية','List4']],
+  plan:[['متابعة الخطة المدرسية','List2']],
+  monitor:[['سجل الزيارات الإشرافية','List'],['سجل التوصيات الإشرافية','List1']],
+  activities:[['الأنشطة المدرسية','List5'],['المبادرات المدرسية','List6']],
+  safety:[['سجل الأمن والسلامة','List7']],
+  quality:[['التقويم الذاتي والجودة','List8'],['خطة التحسين المدرسي','List9'],['سجل الأدلة المدرسية','List10']]
+ };
+ const cloudBox=document.getElementById('hazmCloudLinks');
+ cloudBox.replaceChildren();
+ const currentLinks=cloudLists[s.id]||[];
+ currentLinks.forEach(([label,list],idx)=>{
+  const a=document.createElement('a');
+  a.className='btn hazm-cloud-link'+(idx%2?' hazm-cloud-link-secondary':'');
+  a.href='https://moeom.sharepoint.com/sites/alhazm-digital/Lists/'+list+'/AllItems.aspx';
+  a.target='_blank';a.rel='noopener noreferrer';
+  a.title='يفتح السجل المحمي على SharePoint في تبويب جديد للحسابات المصرح لها';
+  a.textContent='☁ '+label+' ↗';
+  cloudBox.append(a);
+ });
+ cloudBox.classList.toggle('hide',currentLinks.length===0);
  document.getElementById('serviceFrame').srcdoc=decodeEmbedded(serviceBinary[s.id]);
  window.scrollTo(0,0);
 }
