@@ -66,13 +66,25 @@ const services=[
 {id:'monitor',icon:'📝',name:'الزيارات الإشرافية',desc:'الزيارات للفصلين الدراسيين ومتابعة التوصيات وأثر تطبيقها.',tags:['teachers','admin'],active:true},
 {id:'activities',icon:'🏆',name:'الأنشطة والمبادرات',desc:'توثيق الأنشطة والمبادرات بالصور والأدلة وقياس أثرها على التعلم.',tags:['teachers','parents','admin'],active:true},
 {id:'safety',icon:'🛡️',name:'درع الحزم | الأمن والسلامة',desc:'الجولات التفقدية والحارس والإخلاء ولجنة السلامة والأدلة والتقارير.',tags:['admin'],active:true},
-{id:'quality',icon:'📊',name:'ميزان الحزم | التقويم الذاتي والجودة',desc:'المجالات الخمسة وبنك الأدلة وخطة التحسين وجاهزية التقويم الخارجي.',tags:['admin','teachers'],active:true}
+{id:'quality',icon:'📊',name:'ميزان الحزم | التقويم الذاتي والجودة',desc:'المجالات الخمسة وبنك الأدلة وخطة التحسين وجاهزية التقويم الخارجي.',tags:['admin','teachers'],active:true},
+{id:'marsad',icon:'🔎',name:'مرصد نور',desc:'متابعة التحضير في منصة نور والأنشطة الداعمة وسجل الدرجات لدى المعلمات.',tags:['admin'],active:true}
 ];
 
 const serviceBinary={clock:document.getElementById('embedded-clock').textContent.trim(),compass:document.getElementById('embedded-compass').textContent.trim(),pd:document.getElementById('embedded-pd').textContent.trim(),family:document.getElementById('embedded-family').textContent.trim(),plan:document.getElementById('embedded-plan').textContent.trim(),monitor:document.getElementById('embedded-monitor').textContent.trim(),activities:document.getElementById('embedded-activities').textContent.trim(),safety:document.getElementById('embedded-safety').textContent.trim(),quality:document.getElementById('embedded-quality').textContent.trim()};
 let activeService=null;
 function decodeEmbedded(b64){const raw=atob(b64);return new TextDecoder('utf-8').decode(Uint8Array.from(raw,c=>c.charCodeAt(0)))}
 function openService(s){
+ if(s.id==='marsad'){
+  activeService=s.id;
+  document.querySelector('main .hero').classList.add('hide');
+  for(const sec of document.querySelectorAll('main.wrap > section'))if(sec.id!=='embeddedService')sec.classList.add('hide');
+  document.querySelector('.grid4').classList.add('hide');
+  const view=document.getElementById('embeddedService');view.classList.remove('hide');document.body.classList.add('service-expanded');
+  document.getElementById('serviceHeading').textContent=s.name;
+  document.getElementById('hazmCloudLinks').classList.add('hide');
+  document.getElementById('serviceFrame').src='marsad-noor.html';
+  window.scrollTo(0,0);return;
+ }
  if(!serviceBinary[s.id]){alert('هذه الخدمة غير مفعلة بعد');return}
  activeService=s.id;
  document.querySelector('main .hero').classList.add('hide');
@@ -84,7 +96,7 @@ function openService(s){
  document.getElementById('serviceFrame').srcdoc=decodeEmbedded(serviceBinary[s.id]);
  window.scrollTo(0,0);
 }
-function returnPortal(){document.body.classList.remove('service-expanded');activeService=null;document.getElementById('serviceFrame').removeAttribute('srcdoc');document.getElementById('embeddedService').classList.add('hide');document.querySelector('main .hero').classList.remove('hide');document.querySelector('.grid4').classList.remove('hide');for(const sec of document.querySelectorAll('main.wrap > section'))if(sec.id!=='embeddedService')sec.classList.remove('hide');window.scrollTo(0,0)}
+function returnPortal(){document.body.classList.remove('service-expanded');activeService=null;document.getElementById('serviceFrame').removeAttribute('srcdoc');document.getElementById('serviceFrame').removeAttribute('src');document.getElementById('embeddedService').classList.add('hide');document.querySelector('main .hero').classList.remove('hide');document.querySelector('.grid4').classList.remove('hide');for(const sec of document.querySelectorAll('main.wrap > section'))if(sec.id!=='embeddedService')sec.classList.remove('hide');window.scrollTo(0,0)}
 document.getElementById('returnPortal').onclick=returnPortal;
 document.getElementById('fullView').onclick=()=>{const f=document.getElementById('serviceFrame');if(f.requestFullscreen)f.requestFullscreen();else{f.style.height=f.style.height==='95vh'?'78vh':'95vh'}};
 
