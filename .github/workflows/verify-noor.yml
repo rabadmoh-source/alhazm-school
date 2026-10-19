@@ -1,0 +1,17 @@
+name: Verify Noor addition
+on:
+  push:
+    branches: [feature-marsad-noor]
+  pull_request:
+    paths:
+      - index.html
+      - tests/check_marsad_additive.py
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: git fetch origin main --depth=1
+      - run: python tests/check_marsad_additive.py
