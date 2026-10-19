@@ -223,22 +223,27 @@ const shade=document.getElementById('shade');const close=()=>shade.classList.rem
   try{
    const doc=frame.contentDocument;
    if(!doc||!doc.getElementById('liveClock'))return;
-   for(const id of ['home','duty']){
-    const target=doc.getElementById(id);
-    if(!target||doc.getElementById('alhazm-daily-duty-'+id))continue;
-    const card=doc.createElement('div');
-    card.id='alhazm-daily-duty-'+id;
-    card.className='card';
-    card.style.cssText='margin-top:16px;padding:14px';
-    const heading=doc.createElement('h2');heading.textContent='📅 مناوبة اليوم';
-    heading.style.cssText='color:#70558d;margin:0 0 10px';
-    const viewer=doc.createElement('iframe');
-    viewer.title='مناوبة اليوم - مدرسة الحزم';
-    viewer.src=new URL('duty-today.html',window.location.href).href;
-    viewer.style.cssText='width:100%;height:575px;border:0;border-radius:16px;background:#f8f6fc';
-    card.append(heading,viewer);target.appendChild(card);
+   const old=doc.querySelectorAll('[id^="alhazm-daily-duty-"]');
+   old.forEach(x=>x.remove());
+   const current=doc.getElementById('todayDuty');
+   if(current&&!doc.getElementById('alhazm-daily-duty-inline')){
+     current.textContent='';
+     const viewer=doc.createElement('iframe');
+     viewer.id='alhazm-daily-duty-inline';viewer.title='مناوبة اليوم';
+     viewer.src=new URL('duty-today.html?compact=1',location.href).href;
+     viewer.style.cssText='display:block;width:100%;height:225px;border:0;border-radius:10px;background:transparent';
+     current.appendChild(viewer);
    }
-  }catch(e){console.warn('Daily duty display unavailable',e)}
+   const duty=doc.getElementById('duty');
+   if(duty&&!doc.getElementById('alhazm-duty-manager')){
+     const box=doc.createElement('div');box.id='alhazm-duty-manager';box.className='card';
+     box.style.cssText='margin:12px 0;padding:12px';
+     const link=doc.createElement('a');link.href=new URL('duty-today.html',location.href).href;
+     link.target='_blank';link.rel='noopener';link.textContent='📅 مراجعة المناوبات ورفع PDF أو Excel';
+     link.style.cssText='display:inline-block;background:#70558d;color:white;text-decoration:none;padding:10px 14px;border-radius:10px';
+     box.appendChild(link);duty.appendChild(box);
+   }
+  }catch(e){console.warn('Duty viewer unavailable',e)}
  });
 })();
 </script>
