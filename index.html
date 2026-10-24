@@ -269,7 +269,7 @@ const apiKey='sb_publishable_O_JqIM-VqzdGgU8VTvhRHQ_eQ9eTH5R';
 let clientPromise;
 function client(){return clientPromise||(clientPromise=new Promise((resolve,reject)=>{
  if(window.supabase?.createClient)return resolve(window.supabase.createClient(endpoint,apiKey,{auth:{persistSession:true,storageKey:'alhazm-evidence-session'}}));
- const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.3/dist/umd/supabase.min.js';
+ const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
  s.onload=()=>window.supabase?.createClient?resolve(window.supabase.createClient(endpoint,apiKey,{auth:{persistSession:true,storageKey:'alhazm-evidence-session'}})):reject(Error('تعذر تشغيل مكتبة التخزين'));
  s.onerror=()=>reject(Error('تعذر تحميل مكتبة التخزين'));document.head.appendChild(s)
 }))}
@@ -278,7 +278,7 @@ function boot(){
  let doc;try{doc=frame.contentDocument;if(!doc||!doc.title.includes('ميزان الحزم')||!doc.getElementById('content'))return}catch(e){return}
  if(doc.__hazmCloudEvidence)return;doc.__hazmCloudEvidence=true;
  const st=doc.createElement('style');st.textContent='.hazm-evidence-card-panel{background:#faf8fe;border:1px solid #ddd0eb;border-radius:12px;padding:12px;margin:12px 0;clear:both}.hazm-evidence-card-panel button{background:#70558d;color:white;border:0;border-radius:8px;padding:7px 12px;margin:3px;cursor:pointer}.hazm-evidence-card-panel input[type=email],.hazm-evidence-card-panel input[type=password]{margin:4px;padding:7px;border:1px solid #c9b5db;border-radius:7px;max-width:220px}.hazm-evidence-entry{display:flex;align-items:center;gap:7px;padding:8px;border-bottom:1px solid #e9e1ef;flex-wrap:wrap}.hazm-evidence-entry strong{flex:1;overflow-wrap:anywhere}.hazm-evidence-hint{font-size:12px;color:#786a83;margin:8px 0}';doc.head.append(st);
- const ids=()=>{try{return new Set((doc.defaultView.eval('state.indicator')||[]).map(x=>String(x.id)))}catch{return new Set()}};
+ 
  async function render(panel,id){
  const list=panel.querySelector('.hazm-evidence-list'),msg=panel.querySelector('.hazm-evidence-hint');
  try{const sb=await client(),{data:{user}}=await sb.auth.getUser();if(!panel.isConnected)return;
@@ -300,7 +300,7 @@ function boot(){
  }
  function attach(rec,id){
  if(rec.querySelector('.hazm-evidence-card-panel'))return;
- const panel=doc.createElement('div');panel.className='hazm-evidence-card-panel';
+ const panel=doc.createElement('div');panel.className='hazm-evidence-card-panel';panel.setAttribute('data-hazm-cloud','1');
  const heading=doc.createElement('strong');heading.textContent='☁️ أدلة المؤشر السحابية';
  const count=doc.createElement('span');count.className='hazm-evidence-counter';
  const list=doc.createElement('div');list.className='hazm-evidence-list';
@@ -310,12 +310,12 @@ function boot(){
  const signIn=doc.createElement('button');signIn.textContent='دخول';
  const signUp=doc.createElement('button');signUp.textContent='تسجيل حساب';
  const loginMsg=doc.createElement('div');loginMsg.className='hazm-evidence-hint';
- async function auth(create){try{const sb=await client();if(!email.value||!pass.value)return loginMsg.textContent='أدخلي البريد وكلمة المرور';const v={email:email.value.trim(),password:pass.value};const r=create?await sb.auth.signUp(v):await sb.auth.signInWithPassword(v);if(r.error)throw r.error;loginMsg.textContent=create&&!r.data.session?'تحققي من رسالة تأكيد البريد، ثم اضغطي دخول.':'تم تسجيل الدخول';if(r.data.session)doc.querySelectorAll('.hazm-evidence-card-panel').forEach(p=>render(p,p.dataset.indicator))}catch(e){loginMsg.textContent=e.message}}
- signIn.onclick=()=>auth(false);signUp.onclick=()=>auth(true);login.append(email,pass,signIn,signUp,loginMsg);
+ async function auth(create){try{loginMsg.textContent='جارٍ التواصل مع خدمة الحسابات...';const sb=await client();if(!email.value||!pass.value)return loginMsg.textContent='أدخلي البريد وكلمة المرور';const v={email:email.value.trim(),password:pass.value};const r=create?await sb.auth.signUp(v):await sb.auth.signInWithPassword(v);if(r.error)throw r.error;loginMsg.textContent=create&&!r.data.session?'تحققي من رسالة تأكيد البريد، ثم اضغطي دخول.':'تم تسجيل الدخول';if(r.data.session)doc.querySelectorAll('.hazm-evidence-card-panel').forEach(p=>render(p,p.dataset.indicator))}catch(e){loginMsg.textContent=e.message}}
+ signIn.type='button';signUp.type='button';signIn.onclick=e=>{e.preventDefault();auth(false)};signUp.onclick=e=>{e.preventDefault();auth(true)};login.append(email,pass,signIn,signUp,loginMsg);
  const actions=doc.createElement('div');actions.className='hazm-upload-actions';
  const input=doc.createElement('input');input.type='file';input.multiple=true;input.accept='image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp4,.webm,.mov';input.hidden=true;
- const upload=doc.createElement('button');upload.textContent='＋ إضافة أدلة سحابيًا';upload.onclick=()=>input.click();
- const signOut=doc.createElement('button');signOut.textContent='خروج';signOut.onclick=async()=>{(await client()).auth.signOut();doc.querySelectorAll('.hazm-evidence-card-panel').forEach(p=>render(p,p.dataset.indicator))};
+ const upload=doc.createElement('button');upload.type='button';upload.textContent='＋ إضافة أدلة سحابيًا';upload.onclick=()=>input.click();
+ const signOut=doc.createElement('button');signOut.type='button';signOut.textContent='خروج';signOut.onclick=async()=>{(await client()).auth.signOut();doc.querySelectorAll('.hazm-evidence-card-panel').forEach(p=>render(p,p.dataset.indicator))};
  const progress=doc.createElement('div');progress.className='hazm-evidence-hint';
  input.onchange=async()=>{const files=[...input.files];input.value='';upload.disabled=true;
  try{const sb=await client(),{data:{user}}=await sb.auth.getUser();if(!user)throw Error('سجلي الدخول أولًا');
@@ -332,8 +332,32 @@ function boot(){
  const note=doc.createElement('div');note.className='hazm-evidence-hint';
  panel.dataset.indicator=id;panel.append(heading,count,login,list,actions,note);rec.append(panel);render(panel,id)
  }
- function refresh(){const known=ids();doc.querySelectorAll('#content .record').forEach(rec=>{const e=rec.querySelector('[data-edit]');if(e&&known.has(String(e.dataset.edit)))attach(rec,String(e.dataset.edit))})}
- let pending=false;const obs=new doc.defaultView.MutationObserver(()=>{if(pending)return;pending=true;doc.defaultView.requestAnimationFrame(()=>{pending=false;refresh()})});obs.observe(doc.getElementById('content'),{childList:true,subtree:true});refresh()
+ function refresh(){
+  const editor=doc.getElementById('editor'),form=doc.getElementById('editForm'),area=doc.getElementById('formFields');
+  if(!editor?.open||!form||!area)return;
+  const code=form.elements.namedItem('code')?.value?.trim();
+  if(!code||!area.querySelector('#fileInput'))return;
+  const domain=form.elements.namedItem('domain')?.value||'';
+  const id=domain+'|'+code;
+  const existing=area.querySelector('[data-hazm-cloud]');
+  if(existing&&existing.dataset.indicator===id)return;
+  if(existing)existing.remove();
+  const old=area.querySelector('#fileInput');
+  if(old){const field=old.closest('.field');if(field)field.style.display='none'}
+  area.querySelectorAll('.q-video-link-entry').forEach(x=>{x.style.display='none'});
+  const anchor=old?.closest('.field');
+  const host=doc.createElement('div');
+  if(anchor)anchor.before(host);else area.append(host);
+  attach(host,id);
+ }
+ let pending=false;
+ const observer=new doc.defaultView.MutationObserver(()=>{
+  if(pending)return;pending=true;
+  doc.defaultView.requestAnimationFrame(()=>{pending=false;refresh()});
+ });
+ observer.observe(doc.getElementById('editor'),{childList:true,subtree:true,attributes:true,attributeFilter:['open']});
+ doc.addEventListener('click',e=>{if(e.target.closest('[data-cat-code]'))doc.defaultView.setTimeout(refresh,80)},true);
+ refresh();
 }
 frame.addEventListener('load',boot)
 })();
