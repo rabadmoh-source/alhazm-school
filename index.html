@@ -322,7 +322,7 @@ function boot(){
  let n=0;for(const f of files){try{
  if(f.size>50*1024*1024)throw Error('الملف أكبر من الحد الحالي: 50 ميغابايت');
  progress.textContent='جارٍ رفع '+f.name+' ('+(n+1)+' من '+files.length+')';
- const path=user.id+'/'+crypto.randomUUID()+'/'+f.name.replace(/[\\/]/g,'_');
+ const ext=(f.name.split('.').pop()||'bin').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,12)||'bin';const path=user.id+'/'+crypto.randomUUID()+'.'+ext;
  const {error}=await sb.storage.from('hazm-evidence').upload(path,f,{contentType:f.type||'application/octet-stream',upsert:false});if(error)throw error;
  const meta=await sb.from('hazm_evidence_files').insert({user_id:user.id,indicator_key:id,file_name:f.name,storage_path:path,mime_type:f.type,file_size:f.size});if(meta.error)throw meta.error;n++;
  }catch(e){alert('تعذر رفع '+f.name+': '+e.message)}}
