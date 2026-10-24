@@ -259,4 +259,49 @@ const shade=document.getElementById('shade');const close=()=>shade.classList.rem
  });
 })();
 </script>
+
+<script id="hazm-quality-cards-live-20261024">
+/* Add evidence cards to existing self-evaluation indicators. No edits to original record state. */
+(function(){
+const frame=document.getElementById('serviceFrame'),DB='hazm-quality-cards-idb-v1';
+if(!frame||!window.indexedDB)return;
+const dbp=new Promise((resolve,reject)=>{
+ const r=indexedDB.open(DB,1);
+ r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('docs')){const s=d.createObjectStore('docs',{keyPath:'id'});s.createIndex('indicator','indicator',{unique:false})}};
+ r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+});
+const all=async key=>{const d=await dbp;return new Promise((ok,no)=>{const t=d.transaction('docs','readonly'),r=t.objectStore('docs').index('indicator').getAll(key);r.onsuccess=()=>ok(r.result||[]);r.onerror=()=>no(r.error)})};
+const mutate=async(mode,fn)=>{const d=await dbp;return new Promise((ok,no)=>{const t=d.transaction('docs',mode);fn(t.objectStore('docs'));t.oncomplete=ok;t.onerror=()=>no(t.error)})};
+const size=n=>n>=1048576?(n/1048576).toFixed(1)+' م.ب':Math.ceil(n/1024)+' ك.ب';
+function boot(){
+ let doc;try{doc=frame.contentDocument;if(!doc||!doc.getElementById('content')||!doc.title.includes('ميزان الحزم'))return}catch(e){return}
+ if(doc.__hazmEvidenceCards)return;doc.__hazmEvidenceCards=true;
+ const style=doc.createElement('style');style.textContent='.hazm-evidence-card-panel{background:#faf8fe;border:1px solid #ddd0eb;border-radius:12px;padding:12px;margin:12px 0;clear:both}.hazm-evidence-card-panel button{background:#70558d;color:white;border:0;border-radius:8px;padding:7px 12px;margin:3px;cursor:pointer}.hazm-evidence-entry{display:flex;align-items:center;gap:9px;padding:7px;border-bottom:1px solid #e9e1ef;flex-wrap:wrap}.hazm-evidence-entry strong{flex:1;overflow-wrap:anywhere}.hazm-evidence-hint{font-size:12px;color:#786a83}';doc.head.append(style);
+ const recordIds=()=>new Set((doc.defaultView.state?.indicator||[]).map(x=>String(x.id)));
+ async function draw(box,id){let entries=box.querySelector('.hazm-evidence-list');try{const records=await all(id);if(!box.isConnected)return;entries.replaceChildren();box.querySelector('.hazm-evidence-counter').textContent='('+records.length+')';records.forEach(item=>{const line=doc.createElement('div');line.className='hazm-evidence-entry';const name=doc.createElement('strong');name.textContent=item.name+' · '+size(item.size);const view=doc.createElement('button');view.textContent='عرض';view.onclick=()=>{const url=URL.createObjectURL(item.blob);window.open(url,'_blank','noopener');setTimeout(()=>URL.revokeObjectURL(url),90000)};const del=doc.createElement('button');del.textContent='حذف';del.onclick=async()=>{if(!confirm('حذف هذا المرفق من هذا الجهاز؟'))return;await mutate('readwrite',s=>s.delete(item.id));draw(box,id)};line.append(name,view,del);entries.append(line)})}catch(err){entries.textContent='تعذر قراءة الأدلة المخزنة على هذا الجهاز.'}}
+ function attach(rec,id){
+ if(rec.querySelector('.hazm-evidence-card-panel'))return;
+ const panel=doc.createElement('div');panel.className='hazm-evidence-card-panel';
+ const heading=doc.createElement('strong');heading.textContent='📎 أدلة المؤشر ';
+ const count=doc.createElement('span');count.className='hazm-evidence-counter';
+ const list=doc.createElement('div');list.className='hazm-evidence-list';
+ const input=doc.createElement('input');input.type='file';input.multiple=true;input.accept='image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp4,.webm,.zip';input.hidden=true;
+ const upload=doc.createElement('button');upload.type='button';upload.textContent='＋ إضافة أدلة';upload.onclick=()=>input.click();
+ const note=doc.createElement('div');note.className='hazm-evidence-hint';note.textContent='الحفظ على هذا الجهاز فقط حاليًا؛ لا ترفعي الأدلة النهائية قبل تفعيل التخزين السحابي.';
+ input.onchange=async()=>{const files=[...input.files];input.value='';upload.disabled=true;let n=0;for(const file of files){try{if(file.size>500*1024*1024)throw Error('حجم الملف كبير جدًا');await mutate('readwrite',s=>s.put({id:String(Date.now())+'-'+Math.random(),indicator:id,name:file.name,type:file.type,size:file.size,blob:file}));n++}catch(err){alert('تعذر حفظ «'+file.name+'» محليًا. قد تكون مساحة المتصفح غير كافية.')}}upload.disabled=false;note.textContent='حُفظ '+n+' من '+files.length+' ملف على هذا الجهاز فقط.';draw(panel,id)};
+ panel.append(heading,count,list,upload,input,note);rec.append(panel);draw(panel,id);
+ }
+ function refresh(){
+  const ids=recordIds();
+  doc.querySelectorAll('#content .record').forEach(rec=>{
+   const el=rec.querySelector('[data-edit]');if(el&&ids.has(String(el.dataset.edit)))attach(rec,String(el.dataset.edit))
+  });
+ }
+ let pending=false;
+ const observer=new doc.defaultView.MutationObserver(()=>{if(pending)return;pending=true;doc.defaultView.requestAnimationFrame(()=>{pending=false;refresh()})});
+ observer.observe(doc.getElementById('content'),{childList:true,subtree:true});refresh();
+}
+frame.addEventListener('load',boot);
+})();
+</script>
 </body></html>
