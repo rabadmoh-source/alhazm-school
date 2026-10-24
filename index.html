@@ -294,15 +294,50 @@ function boot(){
  const view=doc.createElement('button');view.textContent='عرض / تنزيل';view.onclick=async()=>{const {data,error}=await sb.storage.from('hazm-evidence').createSignedUrl(item.storage_path,60);if(error)return alert(error.message);window.open(data.signedUrl,'_blank','noopener')};
  const del=doc.createElement('button');del.textContent='حذف';del.onclick=async()=>{if(!confirm('حذف هذا الدليل سحابيًا؟'))return;const a=await sb.storage.from('hazm-evidence').remove([item.storage_path]);if(a.error)return alert(a.error.message);const b=await sb.from('hazm_evidence_files').delete().eq('id',item.id);if(b.error)return alert(b.error.message);render(panel,id)};
  line.append(name,view,del);list.append(line);
- // Display uploaded images automatically without an extra preview click.
- if((item.mime_type||'').startsWith('image/')||/\.(png|jpe?g|gif|webp|bmp|avif)$/i.test(item.file_name||'')){
-  const preview=doc.createElement('img');
-  preview.alt=item.file_name;
-  preview.loading='lazy';
-  preview.style.cssText='display:block;max-width:100%;width:auto;max-height:360px;object-fit:contain;border:1px solid #e4d9ee;border-radius:12px;margin:7px auto 12px;background:white';
+ // Automatic in-card preview; preserve original evidence controls and records.
+ const filename=item.file_name||'';
+ const mime=(item.mime_type||'').toLowerCase();
+ const isImage=mime.startsWith('image/')||/\.(png|jpe?g|gif|webp|bmp|avif)$/i.test(filename);
+ const isPDF=mime==='application/pdf'||/\.pdf$/i.test(filename);
+ const isVideo=mime.startsWith('video/')||/\.(mp4|webm|mov|m4v|ogg)$/i.test(filename);
+ const isOffice=/\.(doc|docx|xls|xlsx|ppt|pptx)$/i.test(filename);
+ if(isImage||isPDF||isVideo||isOffice){
+  const wrap=doc.createElement('div');
+  wrap.className='hazm-evidence-inline-preview';
+  wrap.style.cssText='width:100%;margin:7px 0 12px;clear:both';
   const {data:link,error:linkError}=await sb.storage.from('hazm-evidence').createSignedUrl(item.storage_path,3600);
-  if(!linkError&&panel.isConnected){preview.src=link.signedUrl;list.append(preview)}
+  if(!linkError&&panel.isConnected&&link?.signedUrl){
+   const url=link.signedUrl;
+   let preview;
+   if(isImage){
+    preview=doc.createElement('img');preview.alt=filename;preview.loading='lazy';
+    preview.style.cssText='display:block;max-width:100%;width:auto;max-height:360px;object-fit:contain;margin:auto';
+    preview.src=url;
+   }else if(isVideo){
+    preview=doc.createElement('video');preview.controls=true;preview.preload='metadata';
+    preview.setAttribute('playsinline','');preview.src=url;
+    preview.style.cssText='display:block;width:100%;max-height:390px;background:#120e19';
+   }else{
+    preview=doc.createElement('iframe');preview.loading='lazy';preview.title='معاينة '+filename;
+    preview.setAttribute('referrerpolicy','no-referrer');
+    preview.style.cssText='display:block;width:100%;height:380px;border:0;background:white';
+    preview.src=isPDF?url:'https://view.officeapps.live.com/op/embed.aspx?src='+encodeURIComponent(url);
+   }
+   preview.style.borderRadius='10px';
+   wrap.append(preview);
+   if(isOffice){
+    const hint=doc.createElement('div');hint.className='hazm-evidence-hint';
+    hint.textContent='تُعرض ملفات Word وExcel وPowerPoint بواسطة عارض Microsoft؛ إذا لم تظهر المعاينة استخدمي زر عرض / تنزيل أعلاه.';
+    wrap.append(hint);
+   }
+   list.append(wrap);
+  }else{
+   const hint=doc.createElement('div');hint.className='hazm-evidence-hint';
+   hint.textContent='تعذرت المعاينة التلقائية لهذا الملف؛ استخدمي زر عرض / تنزيل.';
+   wrap.append(hint);list.append(wrap);
+  }
  }
+
  }
  msg.textContent='الحفظ السحابي خاص بحسابك، ويمكنك فتح الأدلة من أجهزتك بعد تسجيل الدخول.';
  }catch(e){msg.textContent='تعذر الاتصال بالتخزين: '+e.message}
