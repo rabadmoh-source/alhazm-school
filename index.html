@@ -343,8 +343,7 @@ function boot(){
   if(existing&&existing.dataset.indicator===id)return;
   if(existing)existing.remove();
   const old=area.querySelector('#fileInput');
-  if(old){const field=old.closest('.field');if(field)field.style.display='none'}
-  area.querySelectorAll('.q-video-link-entry').forEach(x=>{x.style.display='none'});
+  // Keep all original evidence controls and previously saved attachments visible.
   const anchor=old?.closest('.field');
   const host=doc.createElement('div');
   if(anchor)anchor.before(host);else area.append(host);
