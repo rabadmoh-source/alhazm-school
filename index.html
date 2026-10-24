@@ -293,7 +293,16 @@ function boot(){
  const name=doc.createElement('strong');name.textContent=item.file_name+' · '+fmt(item.file_size);
  const view=doc.createElement('button');view.textContent='عرض / تنزيل';view.onclick=async()=>{const {data,error}=await sb.storage.from('hazm-evidence').createSignedUrl(item.storage_path,60);if(error)return alert(error.message);window.open(data.signedUrl,'_blank','noopener')};
  const del=doc.createElement('button');del.textContent='حذف';del.onclick=async()=>{if(!confirm('حذف هذا الدليل سحابيًا؟'))return;const a=await sb.storage.from('hazm-evidence').remove([item.storage_path]);if(a.error)return alert(a.error.message);const b=await sb.from('hazm_evidence_files').delete().eq('id',item.id);if(b.error)return alert(b.error.message);render(panel,id)};
- line.append(name,view,del);list.append(line)
+ line.append(name,view,del);list.append(line);
+ // Display uploaded images automatically without an extra preview click.
+ if((item.mime_type||'').startsWith('image/')||/\.(png|jpe?g|gif|webp|bmp|avif)$/i.test(item.file_name||'')){
+  const preview=doc.createElement('img');
+  preview.alt=item.file_name;
+  preview.loading='lazy';
+  preview.style.cssText='display:block;max-width:100%;width:auto;max-height:360px;object-fit:contain;border:1px solid #e4d9ee;border-radius:12px;margin:7px auto 12px;background:white';
+  const {data:link,error:linkError}=await sb.storage.from('hazm-evidence').createSignedUrl(item.storage_path,3600);
+  if(!linkError&&panel.isConnected){preview.src=link.signedUrl;list.append(preview)}
+ }
  }
  msg.textContent='الحفظ السحابي خاص بحسابك، ويمكنك فتح الأدلة من أجهزتك بعد تسجيل الدخول.';
  }catch(e){msg.textContent='تعذر الاتصال بالتخزين: '+e.message}
