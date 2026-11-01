@@ -286,14 +286,20 @@ function boot(){
   let active=false;
   function resetContent(){if(!active)return;active=false;content.querySelectorAll(':scope > *').forEach(el=>{if(el.id==='hazm-athar-view')el.remove();else el.style.display=el.dataset.atharDisplay??''})}
   function showAthar(){
-    if(active)return;
+    const parentDoc=doc.defaultView.parent.document;
+    if(parentDoc.getElementById('hazm-athar-fullscreen'))return;
     active=true;
-    for(const el of Array.from(content.children))el.dataset.atharDisplay=el.style.display,el.style.display='none';
-    const area=doc.createElement('section');area.id='hazm-athar-view';area.style.cssText='direction:rtl;text-align:right;background:#faf7fd;border-radius:14px;padding:16px';
-    const head=doc.createElement('h2');head.textContent='💜 أثر ودليل | مبادرة نشر ثقافة الجودة';head.style.color='#734297';
-    const lead=doc.createElement('p');lead.textContent='معرض المنشورات التوعوية حول التقويم الخارجي، مع الوصف وقياس الأثر أسفل كل منشور.';
-    const iframe=doc.createElement('iframe');iframe.title='أثر ودليل';iframe.src='https://rabadmoh-source.github.io/alhazm-school/preview-athar-wa-daleel-v2-20261101.html';iframe.style.cssText='width:100%;height:78vh;min-height:580px;border:1px solid #d8c7e6;border-radius:12px;background:white';
-    area.append(head,lead,iframe);content.append(area);ensureNav();
+    const overlay=parentDoc.createElement('div');overlay.id='hazm-athar-fullscreen';
+    overlay.style.cssText='position:fixed;inset:0;z-index:2147483000;background:#f8f6fb;display:flex;flex-direction:column;direction:rtl;overflow:hidden';
+    const bar=parentDoc.createElement('div');bar.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:white;padding:10px 20px;border-bottom:1px solid #ddd4e7;flex:0 0 auto';
+    const title=parentDoc.createElement('strong');title.textContent='💜 أثر ودليل | ميزان الحزم';title.style.cssText='color:#70439a;font-size:18px';
+    const back=parentDoc.createElement('button');back.type='button';back.textContent='↩ العودة إلى ميزان الحزم';
+    back.style.cssText='background:#734297;color:#fff;border:0;border-radius:10px;padding:10px 16px;cursor:pointer;font:inherit';
+    back.onclick=()=>{overlay.remove();active=false;ensureNav();nav.querySelectorAll('button').forEach(b=>b.classList.remove('active'));const home=nav.querySelector('[data-go="home"]');if(home)home.classList.add('active')};
+    const view=parentDoc.createElement('iframe');view.title='أثر ودليل - الصفحة الكاملة';
+    view.src='https://rabadmoh-source.github.io/alhazm-school/preview-athar-wa-daleel-v2-20261101.html';
+    view.style.cssText='border:0;width:100%;flex:1;min-height:0;display:block;background:white';
+    bar.append(title,back);overlay.append(bar,view);parentDoc.body.append(overlay);ensureNav();
   }
   function ensureNav(){
     if(nav.querySelector('[data-athar-nav]'))return;
