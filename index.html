@@ -280,6 +280,20 @@ const fmt=n=>n>=1048576?(n/1048576).toFixed(1)+' م.ب':Math.max(1,Math.ceil(n/1
 function boot(){
  let doc;try{doc=frame.contentDocument;if(!doc||!doc.title.includes('ميزان الحزم')||!doc.getElementById('content'))return}catch(e){return}
  if(doc.__hazmCloudEvidence)return;doc.__hazmCloudEvidence=true;
+ const panelId='hazm-athar-daleel-panel';
+ if(!doc.getElementById(panelId)){
+  const target=doc.getElementById('content');
+  if(target){
+   const panel=doc.createElement('section');panel.id=panelId;
+   panel.style.cssText='padding:16px;margin:12px 0 20px;background:#faf7fd;border:1px solid #d6c4e9;border-right:5px solid #734297;border-radius:14px;text-align:right;direction:rtl';
+   panel.innerHTML='<strong style="font-size:19px;color:#734297">💜 أثر ودليل | مبادرة نشر ثقافة الجودة</strong><p style="margin:8px 0;color:#4a4253">معرض المنشورات التوعوية حول التقويم الخارجي، مع وصف وقياس أثر أسفل كل منشور.</p>';
+   const btn=doc.createElement('button');btn.textContent='عرض منشورات أثر ودليل';btn.type='button';btn.style.cssText='background:#734297;color:white;border:0;border-radius:9px;padding:9px 16px;cursor:pointer';
+   const host=doc.createElement('div');host.hidden=true;host.style.marginTop='12px';
+   btn.onclick=()=>{host.hidden=!host.hidden;btn.textContent=host.hidden?'عرض منشورات أثر ودليل':'إغلاق المعرض';if(!host.hidden&&!host.firstChild){const iframe=doc.createElement('iframe');iframe.src='https://rabadmoh-source.github.io/alhazm-school/preview-athar-wa-daleel-v2-20261101.html';iframe.title='أثر ودليل';iframe.style.cssText='width:100%;height:80vh;min-height:580px;border:1px solid #ddd;border-radius:10px';host.appendChild(iframe)}};
+   panel.append(btn,host);target.prepend(panel);
+  }
+ }
+
  const st=doc.createElement('style');st.textContent='.hazm-evidence-card-panel{background:#faf8fe;border:1px solid #ddd0eb;border-radius:12px;padding:12px;margin:12px 0;clear:both}.hazm-evidence-card-panel button{background:#70558d;color:white;border:0;border-radius:8px;padding:7px 12px;margin:3px;cursor:pointer}.hazm-evidence-card-panel input[type=email],.hazm-evidence-card-panel input[type=password]{margin:4px;padding:7px;border:1px solid #c9b5db;border-radius:7px;max-width:220px}.hazm-evidence-entry{display:flex;align-items:center;gap:7px;padding:8px;border-bottom:1px solid #e9e1ef;flex-wrap:wrap}.hazm-evidence-entry strong{flex:1;overflow-wrap:anywhere}.hazm-evidence-hint{font-size:12px;color:#786a83;margin:8px 0}';doc.head.append(st);
  
  async function render(panel,id){
