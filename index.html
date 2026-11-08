@@ -70,6 +70,7 @@ const services=[
 {id:'safety',icon:'🛡️',name:'درع الحزم | الأمن والسلامة',desc:'الجولات التفقدية والحارس والإخلاء ولجنة السلامة والأدلة والتقارير.',tags:['admin'],active:true},
 {id:'quality',icon:'📊',name:'ميزان الحزم | التقويم الذاتي والجودة',desc:'المجالات الخمسة وبنك الأدلة وخطة التحسين وجاهزية التقويم الخارجي.',tags:['admin','teachers'],active:true},
 {id:'marsad',icon:'🔎',name:'مرصد نور',desc:'متابعة التحضير في منصة نور والأنشطة الداعمة وسجل الدرجات لدى المعلمات.',tags:['admin'],active:true},
+{id:'riwaq',icon:'📖',name:'رِواق الحزم التربوي',desc:'جولات التعلم وجولات التدريس عالية الجودة ومتابعة أثر التحسين.',tags:['teachers','parents','admin'],active:true},
 {id:'nabd',icon:'💜',name:'نبض الحزم',desc:'سجل متابعة القائدة للمهام اليومية والأسبوعية والشهرية والحصص الإشرافية.',tags:['admin'],active:true}
 ];
 
@@ -77,6 +78,7 @@ const serviceBinary={clock:document.getElementById('embedded-clock').textContent
 let activeService=null;
 function decodeEmbedded(b64){const raw=atob(b64);return new TextDecoder('utf-8').decode(Uint8Array.from(raw,c=>c.charCodeAt(0)))}
 function openService(s){
+ if(s.id==='riwaq'){window.location.href='./riwaq-alhazm.html';return;}
  if(s.id==='certificates'){window.location.href='./certificates-studio.html';return;}
  if(s.id==='nabd'){
   activeService=s.id;
