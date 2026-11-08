@@ -35,7 +35,7 @@ const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt
 function dayIndex(s){let m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');if(!m)return null;let t=Date.UTC(+m[1],+m[2]-1,+m[3]);let v=new Date(t);return v.getUTCFullYear()===+m[1]&&v.getUTCMonth()===+m[2]-1&&v.getUTCDate()===+m[3]?t/86400000:null}
 function render(){
  let db;try{db=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){db={}}
- const teachers=Array.isArray(db.teachers)?db.teachers:[];
+ const teachers=Array.isArray(db.teachers)?db.teachers.filter(n=>n!=='أصيلة عبدالله السالمية'):[];
  const dates=db.days&&typeof db.days==='object'?db.days:{};
  const today=new Date(),now=Date.UTC(today.getFullYear(),today.getMonth(),today.getDate())/86400000,limit=Number($('days').value);
  const entries=teachers.map(name=>{
