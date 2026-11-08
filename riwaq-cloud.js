@@ -49,7 +49,7 @@ async function publishRound(record){
  if(error)throw error;
  record.publicationId=data.id;
  const saved=getDrafts(),index=saved.findIndex(x=>x.id===record.id);
- if(index>=0){saved[index]={...saved[index],publicationId:data.id};putDrafts(saved)}
+ if(index>=0){saved[index]={...saved[index],publicationId:data.id};putDrafts(saved);renderLocalArchive()}
  await loadPublic();
  return true;
 }
@@ -91,9 +91,41 @@ for(const pg of ['learn','teach','impact']){
  function refresh(){list.replaceChildren(new Option('اختاري جولة محفوظة',''));getDrafts().filter(d=>d.page===pg).forEach(d=>list.add(new Option(d.title,d.id)));if(opened)list.value=opened}
  header.querySelector('.riwaq-local-previous').onclick=()=>{history.hidden=!history.hidden;refresh()};
  refresh();
- footer.querySelector('.riwaq-local-save').onclick=async()=>{const name=title.value.trim();if(!name){msg.textContent='اكتبي عنوان الجولة أولًا.';title.focus();return}try{if(existingDate)existingDate.value=date.value;const drafts=getDrafts();if(!opened)opened=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);const idx=drafts.findIndex(d=>d.id===opened);const record={id:opened,page:pg,title:name,date:date.value,values:snapshot(pg),modified:new Date().toISOString(),publicationId:idx>=0?drafts[idx].publicationId:null};if(idx<0)drafts.unshift(record);else drafts[idx]=record;putDrafts(drafts);refresh();msg.textContent='تم حفظ الجولة محليًا؛ جارٍ نشرها...';try{await publishRound(record);msg.textContent='تم حفظ الجولة ونشرها في الرواق بنجاح.';footer.querySelector('.riwaq-publish-access').hidden=true}catch(e){msg.textContent='تم حفظ الجولة على جهازك، ولكن لم تُنشر بعد: '+e.message;footer.querySelector('.riwaq-publish-access').hidden=false}if(photoInput){storeRoundPhotos(opened,loadedPhotos).then(()=>{if(!msg.textContent.includes('لم تُنشر')&&!msg.textContent.includes('نشرها'))msg.textContent='تم حفظ الجولة والأدلة المصورة على هذا الجهاز.'}).catch(()=>{msg.textContent=msg.textContent+' تعذّر حفظ الصور على هذا الجهاز.'})}}catch(e){msg.textContent='تعذّر الحفظ المحلي: '+e.message}};
+ footer.querySelector('.riwaq-local-save').onclick=async()=>{const name=title.value.trim();if(!name){msg.textContent='اكتبي عنوان الجولة أولًا.';title.focus();return}try{if(existingDate)existingDate.value=date.value;const drafts=getDrafts();if(!opened)opened=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);const idx=drafts.findIndex(d=>d.id===opened);const record={id:opened,page:pg,title:name,date:date.value,values:snapshot(pg),modified:new Date().toISOString(),publicationId:idx>=0?drafts[idx].publicationId:null};if(idx<0)drafts.unshift(record);else drafts[idx]=record;putDrafts(drafts);refresh();renderLocalArchive();msg.textContent='تم حفظ الجولة محليًا؛ جارٍ نشرها...';try{await publishRound(record);msg.textContent='تم حفظ الجولة ونشرها في الرواق بنجاح.';footer.querySelector('.riwaq-publish-access').hidden=true}catch(e){msg.textContent='تم حفظ الجولة على جهازك، ولكن لم تُنشر بعد: '+e.message;footer.querySelector('.riwaq-publish-access').hidden=false}if(photoInput){storeRoundPhotos(opened,loadedPhotos).then(()=>{if(!msg.textContent.includes('لم تُنشر')&&!msg.textContent.includes('نشرها'))msg.textContent='تم حفظ الجولة والأدلة المصورة على هذا الجهاز.'}).catch(()=>{msg.textContent=msg.textContent+' تعذّر حفظ الصور على هذا الجهاز.'})}}catch(e){msg.textContent='تعذّر الحفظ المحلي: '+e.message}};
  footer.querySelector('.riwaq-local-new').onclick=()=>{opened=null;title.value='';date.value='';fields(pg).forEach(x=>{x.value='';x.dispatchEvent(new Event('change',{bubbles:true}))});refresh();list.value='';history.hidden=true;if(photoInput){photoInput.value='';loadedPhotos=[];footer.querySelector('.riwaq-learning-evidence').renderPhotos([])}msg.textContent='جولة جديدة جاهزة للإضافة.';title.focus()};
  list.onchange=()=>{const record=getDrafts().find(d=>d.id===list.value);if(!record)return;opened=record.id;title.value=record.title;restore(pg,record.values||[]);date.value=record.date||(existingDate?existingDate.value:'');msg.textContent='تم فتح الجولة المحفوظة، ويمكنك تعديلها وحفظها.';if(photoInput){photoInput.value='';loadedPhotos=[];footer.querySelector('.riwaq-learning-evidence').renderPhotos([]);readRoundPhotos(record.id).then(files=>{if(opened!==record.id)return;loadedPhotos=files;footer.querySelector('.riwaq-learning-evidence').renderPhotos(files)}).catch(()=>{msg.textContent='تم فتح الجولة، لكن تعذّر استرجاع صورها.'})}history.hidden=true};
 }
+
+function renderLocalArchive(){
+ if(visitorMode)return;
+ let panel=document.getElementById('riwaq-local-archive');
+ if(!panel){
+ panel=document.createElement('div');panel.id='riwaq-local-archive';panel.className='card';
+ const home=document.getElementById('home');home.insertBefore(panel,home.firstElementChild);
+ }
+ const drafts=getDrafts();
+ panel.replaceChildren();
+ const heading=document.createElement('h3');heading.textContent='جولاتك المحفوظة على هذا الجهاز ('+drafts.length+')';panel.append(heading);
+ const note=document.createElement('p');note.className='tiny';note.textContent='هذه الجولات محفوظة في متصفحك، ولا تعني الأرقام الصفرية في عدادات النشر أنها حُذفت. يمكنك فتح أي جولة للتعديل.';panel.append(note);
+ if(!drafts.length){const p=document.createElement('p');p.textContent='لا توجد جولات محلية في هذا المتصفح حاليًا. إن كنتِ قد أدخلتِ الجولات في متصفح آخر أو على جهاز آخر، افتحيه للاطلاع على نسخته المحلية.';panel.append(p);return}
+ drafts.forEach(d=>{
+ const line=document.createElement('div');line.className='riwaq-approved';
+ const name=document.createElement('strong');name.textContent=(d.title||'جولة')+' — '+(d.page==='teach'?'جولة تدريس':d.page==='impact'?'قياس الأثر':'جولة تعلم')+(d.date?' — '+d.date:'');
+ const button=document.createElement('button');button.type='button';button.textContent='فتح الجولة وتعديلها';
+ button.onclick=()=>{
+  const nav=document.querySelector('nav button[data-page="'+d.page+'"]');if(!nav)return;
+  nav.click();
+  const area=document.getElementById(d.page),sel=area.querySelector('.riwaq-local-list');
+  if(!sel)return;sel.value=d.id;sel.dispatchEvent(new Event('change',{bubbles:true}));
+  area.scrollIntoView({behavior:'smooth',block:'start'});
+ };
+ line.append(name,document.createTextNode(' '),button);
+ const status=document.createElement('span');status.className='tiny';status.textContent=d.publicationId?' منشورة':' محفوظة على الجهاز ولم تُنشر';line.append(status);
+ panel.append(line)
+ });
+}
+document.querySelectorAll('nav button[data-page="home"]').forEach(b=>b.addEventListener('click',renderLocalArchive));
+renderLocalArchive();
+
 lockForms();boot();
 })();
