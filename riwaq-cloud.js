@@ -134,9 +134,9 @@ for(const pg of ['learn','teach','impact']){
  footer.innerHTML='<div class="riwaq-admin-toolbar"><button type="button" class="riwaq-local-save">حفظ الجولة</button><button type="button" class="riwaq-local-new">جولة جديدة</button></div><p class="riwaq-local-msg tiny" role="status"></p><p class="tiny">يُحفظ السجل على هذا الجهاز. لا تظهر بياناته للزوار إلا بعد نجاح المزامنة السحابية.</p>';
  section.append(footer);
  let photoInput=null,photoPreview=null,loadedPhotos=[],photoUrls=[];
- if(pg==='learn'){
-  const evidence=document.createElement('div');evidence.className='riwaq-learning-evidence';evidence.innerHTML='<label for="riwaq-learning-photos">الأدلة المصورة (اختيارية)</label><input id="riwaq-learning-photos" type="file" accept="image/jpeg,image/png,image/webp" multiple><p class="tiny">يمكنك إضافة صور أو حفظ الجولة دون صور. تُحفظ الصور على هذا الجهاز فقط.</p><div class="riwaq-photo-preview" style="display:flex;flex-wrap:wrap;gap:10px"></div>';
-  footer.prepend(evidence);photoInput=evidence.querySelector('input');photoPreview=evidence.querySelector('.riwaq-photo-preview');
+ if(pg==='learn'||pg==='teach'){
+  const evidence=document.createElement('div');evidence.className='riwaq-learning-evidence';evidence.innerHTML=pg==='learn'?'<label for="riwaq-learning-photos">الأدلة المصورة (اختيارية)</label><input id="riwaq-learning-photos" type="file" accept="image/jpeg,image/png,image/webp" multiple><p class="tiny">يمكنك إضافة صور أو حفظ الجولة دون صور. تُحفظ الصور على هذا الجهاز فقط.</p><div class="riwaq-photo-preview" style="display:flex;flex-wrap:wrap;gap:10px"></div>':'<p class="tiny">معاينة الأدلة المصورة المختارة؛ تُحفظ على هذا الجهاز وتظهر في عرض الجولة.</p><div class="riwaq-photo-preview" style="display:flex;flex-wrap:wrap;gap:10px"></div>';
+  footer.prepend(evidence);photoInput=pg==='learn'?evidence.querySelector('input'):section.querySelector('#images');photoPreview=evidence.querySelector('.riwaq-photo-preview');
   function renderPhotos(files){photoUrls.forEach(URL.revokeObjectURL);photoUrls=[];photoPreview.replaceChildren();files.forEach(file=>{const img=document.createElement('img');const url=URL.createObjectURL(file);photoUrls.push(url);img.src=url;img.alt=file.name;img.style.cssText='width:130px;height:100px;object-fit:cover;border-radius:8px;border:1px solid #ddd';photoPreview.append(img)})}
   photoInput.addEventListener('change',()=>{loadedPhotos=[...photoInput.files];renderPhotos(loadedPhotos)});
   evidence.renderPhotos=renderPhotos;
@@ -188,10 +188,29 @@ function openRiwaqReadOnly(id){
  // The original page may have a hidden date input; the top heading already shows its date.
  content.querySelectorAll('[hidden]').forEach(x=>{if(!x.closest('section'))x.remove()});
  article.append(content);
+ const photoSection=document.createElement('section');photoSection.className='riwaq-report-photos';photoSection.style.cssText='margin-top:18px;border-top:1px solid #e9e3ef;padding-top:14px';
+ const photoHeading=document.createElement('h3');photoHeading.textContent='الأدلة المصورة';photoSection.append(photoHeading);
+ const gallery=document.createElement('div');gallery.style.cssText='display:flex;flex-wrap:wrap;gap:12px';
+ photoSection.append(gallery);article.append(photoSection);
+ const localPhotoUrls=[];
+ function clearPhotoUrls(){localPhotoUrls.forEach(URL.revokeObjectURL);localPhotoUrls.length=0}
+ readRoundPhotos(id).then(files=>{
+   if(!backdrop.isConnected)return;
+   if(!files.length){const p=document.createElement('p');p.className='tiny';p.textContent='لا توجد صور محفوظة مع هذه الجولة على هذا الجهاز.';gallery.append(p);return}
+   for(const file of files){
+     if(!(file instanceof Blob)||!file.type.startsWith('image/'))continue;
+     const url=URL.createObjectURL(file);localPhotoUrls.push(url);
+     const anchor=document.createElement('a');anchor.href=url;anchor.target='_blank';anchor.rel='noopener';
+     const img=document.createElement('img');img.src=url;img.alt=file.name||'دليل مصور';img.loading='lazy';img.style.cssText='width:210px;max-width:100%;height:160px;object-fit:contain;border:1px solid #ddd;border-radius:9px;background:#faf9fc';
+     anchor.append(img);gallery.append(anchor)
+   }
+ }).catch(()=>{gallery.textContent='تعذّر قراءة الصور المحفوظة على هذا الجهاز.'});
+ const dismiss=()=>{clearPhotoUrls();backdrop.remove()};
+ close.onclick=dismiss;
  const foot=document.createElement('p');foot.className='tiny';foot.textContent='نسخة للقراءة والاطلاع فقط. لا يمكن تعديل البيانات من هذا العرض.';article.append(foot);
  backdrop.append(article);
- backdrop.addEventListener('click',e=>{if(e.target===backdrop)backdrop.remove()});
- const onKey=e=>{if(e.key==='Escape'){backdrop.remove();document.removeEventListener('keydown',onKey)}};
+ backdrop.addEventListener('click',e=>{if(e.target===backdrop)dismiss()});
+ const onKey=e=>{if(e.key==='Escape'){dismiss();document.removeEventListener('keydown',onKey)}};
  document.addEventListener('keydown',onKey);
  document.body.append(backdrop);
 }
