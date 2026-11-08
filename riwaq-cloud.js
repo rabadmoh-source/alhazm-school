@@ -27,6 +27,10 @@ async function boot(){try{const {createClient}=await import('https://cdn.jsdeliv
 const localPrefix='alhazm-riwaq-drafts-v2';
 function getDrafts(){try{return JSON.parse(localStorage.getItem(localPrefix)||'[]')}catch{return []}}
 function putDrafts(items){localStorage.setItem(localPrefix,JSON.stringify(items))}
+// Photos are optional and stored separately in browser IndexedDB so their size never prevents saving a round.
+function photoDatabase(){return new Promise((resolve,reject)=>{if(!window.indexedDB)return reject(new Error('IndexedDB unavailable'));const req=indexedDB.open('alhazm-riwaq-photos',1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('roundPhotos'))req.result.createObjectStore('roundPhotos')};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+async function storeRoundPhotos(id,files){const db=await photoDatabase();return new Promise((resolve,reject)=>{const tx=db.transaction('roundPhotos','readwrite');tx.objectStore('roundPhotos').put(files,id);tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
+async function readRoundPhotos(id){const db=await photoDatabase();return new Promise((resolve,reject)=>{const tx=db.transaction('roundPhotos','readonly');const req=tx.objectStore('roundPhotos').get(id);req.onsuccess=()=>{db.close();resolve(req.result||[])};req.onerror=()=>{db.close();reject(req.error)}})}
 for(const pg of ['learn','teach','impact']){
  const section=document.getElementById(pg);
  const header=document.createElement('div');header.className='card riwaq-local-header';header.hidden=visitorMode;
@@ -35,6 +39,14 @@ for(const pg of ['learn','teach','impact']){
  const footer=document.createElement('div');footer.className='card riwaq-local-footer';footer.hidden=visitorMode;
  footer.innerHTML='<div class="riwaq-admin-toolbar"><button type="button" class="riwaq-local-save">حفظ الجولة</button><button type="button" class="riwaq-local-new">جولة جديدة</button></div><p class="riwaq-local-msg tiny" role="status"></p><p class="tiny">يُحفظ السجل على هذا المتصفح فقط، ولا يُنشر تلقائيًا للزوار.</p>';
  section.append(footer);
+ let photoInput=null,photoPreview=null,loadedPhotos=[],photoUrls=[];
+ if(pg==='learn'){
+  const evidence=document.createElement('div');evidence.className='riwaq-learning-evidence';evidence.innerHTML='<label for="riwaq-learning-photos">الأدلة المصورة (اختيارية)</label><input id="riwaq-learning-photos" type="file" accept="image/jpeg,image/png,image/webp" multiple><p class="tiny">يمكنك إضافة صور أو حفظ الجولة دون صور. تُحفظ الصور على هذا الجهاز فقط.</p><div class="riwaq-photo-preview" style="display:flex;flex-wrap:wrap;gap:10px"></div>';
+  footer.prepend(evidence);photoInput=evidence.querySelector('input');photoPreview=evidence.querySelector('.riwaq-photo-preview');
+  function renderPhotos(files){photoUrls.forEach(URL.revokeObjectURL);photoUrls=[];photoPreview.replaceChildren();files.forEach(file=>{const img=document.createElement('img');const url=URL.createObjectURL(file);photoUrls.push(url);img.src=url;img.alt=file.name;img.style.cssText='width:130px;height:100px;object-fit:cover;border-radius:8px;border:1px solid #ddd';photoPreview.append(img)})}
+  photoInput.addEventListener('change',()=>{loadedPhotos=[...photoInput.files];renderPhotos(loadedPhotos)});
+  evidence.renderPhotos=renderPhotos;
+ }
  let opened=null;
  const title=header.querySelector('.riwaq-local-title'),date=header.querySelector('.riwaq-local-date'),list=header.querySelector('.riwaq-local-list'),history=header.querySelector('.riwaq-local-history'),msg=footer.querySelector('.riwaq-local-msg');
  const existingDate=pg==='learn'?[...section.querySelectorAll('input[type="date"]')].find(x=>!x.closest('.riwaq-local-header')):null;
@@ -42,9 +54,9 @@ for(const pg of ['learn','teach','impact']){
  function refresh(){list.replaceChildren(new Option('اختاري جولة محفوظة',''));getDrafts().filter(d=>d.page===pg).forEach(d=>list.add(new Option(d.title,d.id)));if(opened)list.value=opened}
  header.querySelector('.riwaq-local-previous').onclick=()=>{history.hidden=!history.hidden;refresh()};
  refresh();
- footer.querySelector('.riwaq-local-save').onclick=()=>{const name=title.value.trim();if(!name){msg.textContent='اكتبي عنوان الجولة أولًا.';title.focus();return}try{if(existingDate)existingDate.value=date.value;const drafts=getDrafts();if(!opened)opened=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);const record={id:opened,page:pg,title:name,date:date.value,values:snapshot(pg),modified:new Date().toISOString()};const idx=drafts.findIndex(d=>d.id===opened);if(idx<0)drafts.unshift(record);else drafts[idx]=record;putDrafts(drafts);refresh();msg.textContent='تم حفظ الجولة على هذا الجهاز بنجاح.'}catch(e){msg.textContent='تعذّر الحفظ المحلي: '+e.message}};
- footer.querySelector('.riwaq-local-new').onclick=()=>{opened=null;title.value='';date.value='';fields(pg).forEach(x=>{x.value='';x.dispatchEvent(new Event('change',{bubbles:true}))});refresh();list.value='';history.hidden=true;msg.textContent='جولة جديدة جاهزة للإضافة.';title.focus()};
- list.onchange=()=>{const record=getDrafts().find(d=>d.id===list.value);if(!record)return;opened=record.id;title.value=record.title;restore(pg,record.values||[]);date.value=record.date||(existingDate?existingDate.value:'');msg.textContent='تم فتح الجولة المحفوظة، ويمكنك تعديلها وحفظها.';history.hidden=true};
+ footer.querySelector('.riwaq-local-save').onclick=()=>{const name=title.value.trim();if(!name){msg.textContent='اكتبي عنوان الجولة أولًا.';title.focus();return}try{if(existingDate)existingDate.value=date.value;const drafts=getDrafts();if(!opened)opened=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);const record={id:opened,page:pg,title:name,date:date.value,values:snapshot(pg),modified:new Date().toISOString()};const idx=drafts.findIndex(d=>d.id===opened);if(idx<0)drafts.unshift(record);else drafts[idx]=record;putDrafts(drafts);refresh();msg.textContent='تم حفظ الجولة على هذا الجهاز بنجاح.';if(photoInput){storeRoundPhotos(opened,loadedPhotos).then(()=>{msg.textContent='تم حفظ الجولة والأدلة المصورة على هذا الجهاز بنجاح.'}).catch(()=>{msg.textContent='تم حفظ الجولة، لكن تعذّر حفظ الصور على هذا الجهاز.'})}}catch(e){msg.textContent='تعذّر الحفظ المحلي: '+e.message}};
+ footer.querySelector('.riwaq-local-new').onclick=()=>{opened=null;title.value='';date.value='';fields(pg).forEach(x=>{x.value='';x.dispatchEvent(new Event('change',{bubbles:true}))});refresh();list.value='';history.hidden=true;if(photoInput){photoInput.value='';loadedPhotos=[];footer.querySelector('.riwaq-learning-evidence').renderPhotos([])}msg.textContent='جولة جديدة جاهزة للإضافة.';title.focus()};
+ list.onchange=()=>{const record=getDrafts().find(d=>d.id===list.value);if(!record)return;opened=record.id;title.value=record.title;restore(pg,record.values||[]);date.value=record.date||(existingDate?existingDate.value:'');msg.textContent='تم فتح الجولة المحفوظة، ويمكنك تعديلها وحفظها.';if(photoInput){photoInput.value='';loadedPhotos=[];footer.querySelector('.riwaq-learning-evidence').renderPhotos([]);readRoundPhotos(record.id).then(files=>{if(opened!==record.id)return;loadedPhotos=files;footer.querySelector('.riwaq-learning-evidence').renderPhotos(files)}).catch(()=>{msg.textContent='تم فتح الجولة، لكن تعذّر استرجاع صورها.'})}history.hidden=true};
 }
 lockForms();boot();
 })();
