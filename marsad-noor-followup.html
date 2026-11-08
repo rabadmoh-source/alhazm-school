@@ -1,0 +1,62 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>سجل المتابعة | مرصد نور</title>
+<style>
+:root{--p:#70558d;--t:#168f91;--bg:#f8f6fb}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#29243b;font:15px/1.8 Tahoma,Arial,sans-serif}
+.wrap{max-width:1200px;margin:auto;padding:24px}.hero{background:linear-gradient(115deg,#554173,#8365a5);color:#fff;padding:26px;border-radius:22px}
+.hero h1{margin:0;font-size:30px}.hero p{margin:5px 0 0}a.back{display:inline-block;margin-bottom:16px;color:var(--p);font-weight:bold;text-decoration:none}
+.panel{background:#fff;border-radius:18px;padding:20px;margin:16px 0;box-shadow:0 5px 18px #55417310}
+.controls{display:flex;align-items:end;gap:12px;flex-wrap:wrap}.controls label{display:flex;flex-direction:column;gap:4px;font-weight:bold}
+select,input{border:1px solid #ddd4e5;border-radius:9px;padding:9px 12px;font:inherit;background:#fff}
+input{min-width:225px;flex:1}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:15px}
+.stat{padding:13px;background:#f7f3fa;border-radius:13px}.stat strong{display:block;font-size:27px;color:var(--p)}
+.scroller{overflow:auto}table{border-collapse:collapse;width:100%;min-width:700px}
+th,td{padding:11px 12px;border-bottom:1px solid #efeaf2;text-align:right}th{background:#f1ecf7;color:#5c447b;white-space:nowrap}
+.tag{display:inline-block;padding:2px 10px;border-radius:20px;font-weight:bold;font-size:12px}
+.never{background:#fdebf0;color:#a02f55}.old{background:#fff3de;color:#865000}.recent{background:#e4f5ee;color:#176c48}
+.muted{color:#716982;font-size:13px}.foot{text-align:center;padding:14px;color:#716982}
+@media(max-width:650px){.wrap{padding:12px}.cards{grid-template-columns:repeat(2,1fr)}.hero h1{font-size:24px}}
+</style></head><body><main class="wrap">
+<a class="back" href="marsad-noor.html">↩ العودة إلى مرصد نور</a>
+<header class="hero"><small>بوابة الحزم الرقمية • نافذة الإدارة</small><h1>📋 سجل المتابعة</h1><p>كشف آخر متابعة لكل معلمة في منصة نور</p></header>
+<section class="panel"><div class="controls">
+<label>تُعد المتابعة قديمة بعد<select id="days"><option value="14">14 يومًا</option><option value="30" selected>30 يومًا</option><option value="45">45 يومًا</option><option value="60">60 يومًا</option><option value="90">90 يومًا</option></select></label>
+<label>حالة المتابعة<select id="filter"><option value="all">جميع المعلمات</option><option value="never">لم تتم متابعتهن</option><option value="old">لم تتم متابعتهن مؤخرًا</option><option value="recent">متابعة حديثة</option></select></label>
+<label style="flex:1">البحث باسم المعلمة<input id="search" placeholder="اكتبي اسم المعلمة..." autocomplete="off"></label>
+</div>
+<div class="cards"><div class="stat">إجمالي المعلمات<strong id="total">—</strong></div><div class="stat">لم تتم متابعتهن<strong id="never">—</strong></div><div class="stat">متابعة غير حديثة<strong id="old">—</strong></div><div class="stat">متابعة حديثة<strong id="recent">—</strong></div></div></section>
+<section class="panel"><h3>آخر متابعة مسجلة</h3><p class="muted">يظهر التاريخ تلقائيًا عند تسجيل حالة «نُفّذ» أو «لم يُنفذ» في أحد بنود المعلمة داخل مرصد نور. الملاحظات وحدها لا تُحتسب متابعة. هذه الصفحة للعرض فقط ولا تُغيّر السجلات.</p>
+<div class="scroller"><table><thead><tr><th>المعلمة</th><th>آخر تاريخ متابعة</th><th>الأيام منذ المتابعة</th><th>عدد أيام المتابعة</th><th>الحالة</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+<p class="foot">مرصد نور • مدرسة الحزم للتعليم الأساسي (1–4)</p></main>
+<script>
+const KEY='alhazm_marsad_noor_v1';
+const $=id=>document.getElementById(id);
+const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+function dayIndex(s){let m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');if(!m)return null;let t=Date.UTC(+m[1],+m[2]-1,+m[3]);let v=new Date(t);return v.getUTCFullYear()===+m[1]&&v.getUTCMonth()===+m[2]-1&&v.getUTCDate()===+m[3]?t/86400000:null}
+function render(){
+ let db;try{db=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){db={}}
+ const teachers=Array.isArray(db.teachers)?db.teachers.filter(n=>n!=='أصيلة عبدالله السالمية'):[];
+ const dates=db.days&&typeof db.days==='object'?db.days:{};
+ const today=new Date(),now=Date.UTC(today.getFullYear(),today.getMonth(),today.getDate())/86400000,limit=Number($('days').value);
+ const entries=teachers.map(name=>{
+   let matches=[];
+   for(let [date,people] of Object.entries(dates)){
+     let day=dayIndex(date),v=people&&people[name];
+     if(day===null||day>now||!v||typeof v!=='object')continue;
+     if(['s0','s1','s2'].some(k=>v[k]==='نُفذ'||v[k]==='لم يُنفذ'))matches.push({date,day});
+   }
+   matches.sort((a,b)=>b.day-a.day);
+   let last=matches[0],elapsed=last?now-last.day:null,status=!last?'never':elapsed>=limit?'old':'recent';
+   return {name,last,elapsed,count:matches.length,status}
+ });
+ const counts={never:0,old:0,recent:0};entries.forEach(e=>counts[e.status]++);
+ $('total').textContent=entries.length;$('never').textContent=counts.never;$('old').textContent=counts.old;$('recent').textContent=counts.recent;
+ const order={never:0,old:1,recent:2};let filter=$('filter').value,search=$('search').value.trim();
+ const shown=entries.filter(e=>(filter==='all'||e.status===filter)&&e.name.includes(search)).sort((a,b)=>order[a.status]-order[b.status]||(b.elapsed??0)-(a.elapsed??0)||a.name.localeCompare(b.name,'ar'));
+ const labels={never:'لم تُتابَع',old:'تحتاج إلى متابعة',recent:'متابعة حديثة'};
+ $('rows').innerHTML=shown.map(e=>'<tr><td><b>'+esc(e.name)+'</b></td><td>'+(e.last?e.last.date:'—')+'</td><td>'+(e.last?(e.elapsed===0?'اليوم':e.elapsed+' يوم'):'—')+'</td><td>'+e.count+'</td><td><span class="tag '+e.status+'">'+labels[e.status]+'</span></td></tr>').join('')||'<tr><td colspan="5">لا توجد أسماء مطابقة.</td></tr>';
+}
+['days','filter','search'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',render));
+window.addEventListener('storage',e=>{if(e.key===KEY)render()});
+render();
+</script></body></html>
