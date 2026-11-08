@@ -167,7 +167,16 @@ for(const pg of ['learn','teach','impact']){
 }
 
 
-function openPublishedRound(d){
+async function openPublishedRound(d){
+ // Always request the current full record; don't depend on cached summary-only cards.
+ if(client&&d?.id){
+  try{
+   const {data,error}=await client.from('riwaq_publications').select('id,title,summary,round_type,published_at,metrics').eq('id',d.id).single();
+   if(error)throw error;
+   d=data;
+  }catch(e){alert('تعذّر تحميل التقرير الكامل من قاعدة البيانات: '+e.message);return}
+ }
+ if(!Array.isArray(d?.metrics?.values)||!d.metrics.values.length){alert('لا توجد تفاصيل التقرير الكامل في السجل المنشور؛ لم يتم فتح الملخص بدل التقرير.');return}
  const overlay=document.createElement('div');overlay.className='riwaq-public-overlay';overlay.style.cssText='position:fixed;inset:0;z-index:10000;background:#24182cbb;overflow:auto;padding:18px';
  const report=document.createElement('article');report.className='riwaq-print-report';report.style.cssText='direction:rtl;background:white;border-radius:14px;max-width:850px;margin:12px auto;padding:30px;font:16px/1.9 Tahoma,Arial,sans-serif;color:#362843';
  const top=document.createElement('div');top.className='riwaq-report-actions';top.style.cssText='display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap';
