@@ -10,7 +10,19 @@ tool.innerHTML='<h3>السجلات الإدارية الخاصة</h3><label>عن
 document.querySelector('#home').append(tool);
 let client=null,admin=false,currentId=null;const visitorMode=new URLSearchParams(location.search).get('visitor')==='1';window.riwaqAdminEnabled=false;const login=document.createElement('div');login.id='riwaq-login';login.innerHTML='<button type="button" id="riwaq-login-toggle">دخول إدارة الرواق</button><div id="riwaq-login-fields"><label for="riwaq-email">البريد الإلكتروني للإدارة</label><input type="email" id="riwaq-email" autocomplete="username" placeholder="بريد الإدارة المسجل"><label for="riwaq-password">كلمة المرور</label><input type="password" id="riwaq-password" autocomplete="current-password"><button type="button" id="riwaq-signin">دخول</button></div></div>';portal.append(login);const logout=document.createElement('button');logout.id='riwaq-signout';logout.textContent='خروج الإدارة';logout.hidden=true;portal.append(logout);const $=id=>document.getElementById(id),message=s=>$('riwaq-message').textContent=s;document.querySelectorAll('nav button[data-page], [data-go]').forEach(b=>b.addEventListener('click',()=>{if(admin){const target=document.querySelector('#'+(b.dataset.page||b.dataset.go));if(target&&target.id!=='home')target.prepend(tool)}}));$('riwaq-login-toggle').onclick=()=>{$('riwaq-login-fields').hidden=!$('riwaq-login-fields').hidden};$('riwaq-signin').onclick=async()=>{if(!client){message('لم يكتمل الاتصال بعد');return}const email=$('riwaq-email').value.trim(),password=$('riwaq-password').value;if(!email||!password){message('أدخلي البريد الإلكتروني وكلمة المرور');return}const btn=$('riwaq-signin');btn.disabled=true;message('جارٍ التحقق من حساب الإدارة...');try{const {error}=await client.auth.signInWithPassword({email,password});if(error)throw error;$('riwaq-password').value='';await checkSession()}catch(e){message('تعذّر تسجيل الدخول: '+e.message)}finally{btn.disabled=false}};logout.onclick=async()=>{await client.auth.signOut();admin=false;currentId=null;lockForms();message('تم تسجيل الخروج')};
 function lockForms(){window.riwaqAdminEnabled=!visitorMode;for(const id of ['learn','teach','impact']){document.querySelectorAll('#'+id+' input,#'+id+' textarea,#'+id+' select').forEach(x=>{x.disabled=visitorMode})}if(!visitorMode){$('element').disabled=!$('dimension').value;$('observation-element').disabled=!$('observation-dimension').value}tool.hidden=!admin;portal.hidden=true;login.hidden=true;logout.hidden=true;document.querySelectorAll('nav button[data-page]').forEach(b=>{if(b.dataset.page!=='home')b.hidden=visitorMode});document.querySelectorAll('[data-go]').forEach(b=>b.hidden=!admin);if(visitorMode){document.querySelectorAll('main section').forEach(x=>x.hidden=x.id!=='home');document.querySelectorAll('nav button[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page==='home'))}else if(admin){const page=currentPage();const target=document.querySelector('#'+page);if(target)target.prepend(tool)}$('riwaq-status').textContent=admin?'وضع الإدارة: يمكنك إضافة الجولات وحفظها، ولا يظهر للزوار إلا الملخص المعتمد.':'وضع الزائر: عرض النتائج المنشورة فقط.';}
-async function loadPublic(){try{const {data,error}=await client.from('riwaq_publications').select('id,title,summary,round_type,published_at').order('published_at',{ascending:false}).limit(50);if(error)throw error;const box=$('riwaq-public-list');box.replaceChildren();if(!data.length){box.textContent='لا توجد نتائج معتمدة للنشر بعد.'}data.forEach(d=>{const item=document.createElement('div');item.className='riwaq-approved';const h=document.createElement('strong');h.textContent=d.title;const p=document.createElement('p');p.textContent=d.summary;item.append(h,p);box.append(item)});renderHomeRounds(data);}catch(e){$('riwaq-public-list').textContent='تعذّر جلب المنشورات المعتمدة حاليًا.';renderHomeRounds();}}
+async function loadPublic(){try{
+ const {data,error}=await client.from('riwaq_publications').select('id,title,summary,round_type,published_at').order('published_at',{ascending:false}).limit(100);
+ if(error)throw error;
+ const box=$('riwaq-public-list');box.replaceChildren();
+ if(!data.length)box.textContent='لم تُنشر جولات على الموقع بعد.';
+ (data||[]).forEach(d=>{
+  const item=document.createElement('div');item.className='riwaq-approved';
+  const btn=document.createElement('button');btn.type='button';btn.textContent=d.title;btn.onclick=()=>openPublishedRound(d);
+  const p=document.createElement('p');p.textContent=d.summary;
+  item.append(btn,p);box.append(item);
+ });
+ renderHomeRounds(data||[]);
+}catch(e){$('riwaq-public-list').textContent='تعذّر جلب الجولات المنشورة حاليًا.';renderHomeRounds();}}
 function fields(page){return [...document.querySelectorAll('#'+page+' input,#'+page+' select,#'+page+' textarea')].filter(x=>x.type!=='file'&&!x.closest('.riwaq-private')&&!x.closest('.riwaq-local-header')&&!x.closest('.riwaq-local-footer'))}
 function snapshot(page){return fields(page).map(x=>({tag:x.tagName,value:x.value}));}
 function restore(page,values){const fs=fields(page);values.forEach((v,i)=>{if(fs[i]){fs[i].value=v.value||'';fs[i].dispatchEvent(new Event('change',{bubbles:true}));}});}
@@ -80,7 +92,7 @@ function renderHomeRounds(publications=null){
   for(const round of unique.values()){
    const row=document.createElement('div');row.style.cssText='padding:5px 0';
    if(round.page){const b=document.createElement('button');b.type='button';b.textContent=round.title;b.style.cssText='padding:4px 7px;text-align:right';b.onclick=()=>openRiwaqReadOnly(round.id);row.append(b)}
-   else{row.textContent=round.title}
+   else{const b=document.createElement('button');b.type='button';b.textContent=round.title;b.style.cssText='padding:4px 7px;text-align:right';b.onclick=()=>{const found=lastPublications.find(x=>x.id===round.id);if(found)openPublishedRound(found)};row.append(b)}
    names.append(row);
   }
  }
@@ -155,6 +167,23 @@ for(const pg of ['learn','teach','impact']){
 }
 
 
+function openPublishedRound(d){
+ const overlay=document.createElement('div');overlay.className='riwaq-public-overlay';overlay.style.cssText='position:fixed;inset:0;z-index:10000;background:#24182cbb;overflow:auto;padding:18px';
+ const report=document.createElement('article');report.className='riwaq-print-report';report.style.cssText='direction:rtl;background:white;border-radius:14px;max-width:850px;margin:12px auto;padding:30px;font:16px/1.9 Tahoma,Arial,sans-serif;color:#362843';
+ const top=document.createElement('div');top.className='riwaq-report-actions';top.style.cssText='display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap';
+ const print=document.createElement('button');print.type='button';print.textContent='طباعة التقرير';print.onclick=()=>window.print();
+ const close=document.createElement('button');close.type='button';close.textContent='إغلاق';close.onclick=()=>overlay.remove();
+ top.append(print,close);
+ const school=document.createElement('p');school.textContent='مدرسة الحزم للتعليم الأساسي (1–4) | رواق الحزم التربوي';
+ const title=document.createElement('h2');title.textContent=d.title;
+ const category=document.createElement('p');category.textContent=d.round_type==='teaching'?'جولة تدريس':d.round_type==='impact'?'تقرير قياس الأثر':'جولة تعلم';
+ const summary=document.createElement('div');summary.textContent=d.summary||'لا يوجد ملخص منشور';summary.style.cssText='white-space:pre-wrap;background:#f8f6fb;border-radius:10px;padding:16px';
+ const date=document.createElement('p');date.style.cssText='font-size:13px;color:#665a6c';date.textContent=d.published_at?'تاريخ النشر: '+new Date(d.published_at).toLocaleDateString('ar-OM'):'';
+ report.append(top,school,title,category,summary,date);
+ overlay.append(report);overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove()});
+ document.body.append(overlay);
+}
+const printStyle=document.createElement('style');printStyle.textContent='@media print{body>*{display:none!important}body>.riwaq-public-overlay,body>.riwaq-readonly-overlay{display:block!important;position:static!important;background:white!important;padding:0!important;overflow:visible!important}.riwaq-public-overlay .riwaq-print-report,.riwaq-readonly-overlay article{display:block!important;box-shadow:none!important;margin:0!important;padding:8mm!important;width:100%!important;max-width:none!important;border:0!important}.riwaq-report-actions,.riwaq-readonly-overlay button{display:none!important}@page{size:A4;margin:13mm}}';document.head.append(printStyle);
 function openRiwaqReadOnly(id){
  const record=getDrafts().find(d=>d.id===id);
  if(!record)return;
@@ -168,8 +197,8 @@ function openRiwaqReadOnly(id){
  article.style.cssText='background:#fff;border-radius:18px;width:min(950px,100%);margin:15px auto;padding:24px;box-shadow:0 15px 48px #241b3655;direction:rtl';
  const bar=document.createElement('div');bar.style.cssText='display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;position:sticky;top:0;background:white;padding:12px 0;border-bottom:1px solid #e4dcea;z-index:1';
  const heading=document.createElement('h2');heading.textContent=record.title;heading.style.margin='0';
- const close=document.createElement('button');close.textContent='إغلاق';close.onclick=()=>backdrop.remove();
- bar.append(heading,close);article.append(bar);
+ const printButton=document.createElement('button');printButton.type='button';printButton.textContent='طباعة التقرير';printButton.onclick=()=>window.print();const close=document.createElement('button');close.textContent='إغلاق';close.onclick=()=>backdrop.remove();
+ bar.append(heading,printButton,close);article.append(bar);
  const date=document.createElement('p');date.className='tiny';date.textContent=record.date?'تاريخ الجولة: '+record.date:'';article.append(date);
  const content=section.cloneNode(true);
  content.removeAttribute('id');content.hidden=false;
