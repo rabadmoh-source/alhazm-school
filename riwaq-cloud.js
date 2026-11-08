@@ -11,7 +11,7 @@ document.querySelector('#home').append(tool);
 let client=null,admin=false,currentId=null;const visitorMode=new URLSearchParams(location.search).get('visitor')==='1';window.riwaqAdminEnabled=false;const login=document.createElement('div');login.id='riwaq-login';login.innerHTML='<button type="button" id="riwaq-login-toggle">دخول إدارة الرواق</button><div id="riwaq-login-fields"><label for="riwaq-email">البريد الإلكتروني للإدارة</label><input type="email" id="riwaq-email" autocomplete="username" placeholder="بريد الإدارة المسجل"><label for="riwaq-password">كلمة المرور</label><input type="password" id="riwaq-password" autocomplete="current-password"><button type="button" id="riwaq-signin">دخول</button></div></div>';portal.append(login);const logout=document.createElement('button');logout.id='riwaq-signout';logout.textContent='خروج الإدارة';logout.hidden=true;portal.append(logout);const $=id=>document.getElementById(id),message=s=>$('riwaq-message').textContent=s;document.querySelectorAll('nav button[data-page], [data-go]').forEach(b=>b.addEventListener('click',()=>{if(admin){const target=document.querySelector('#'+(b.dataset.page||b.dataset.go));if(target&&target.id!=='home')target.prepend(tool)}}));$('riwaq-login-toggle').onclick=()=>{$('riwaq-login-fields').hidden=!$('riwaq-login-fields').hidden};$('riwaq-signin').onclick=async()=>{if(!client){message('لم يكتمل الاتصال بعد');return}const email=$('riwaq-email').value.trim(),password=$('riwaq-password').value;if(!email||!password){message('أدخلي البريد الإلكتروني وكلمة المرور');return}const btn=$('riwaq-signin');btn.disabled=true;message('جارٍ التحقق من حساب الإدارة...');try{const {error}=await client.auth.signInWithPassword({email,password});if(error)throw error;$('riwaq-password').value='';await checkSession()}catch(e){message('تعذّر تسجيل الدخول: '+e.message)}finally{btn.disabled=false}};logout.onclick=async()=>{await client.auth.signOut();admin=false;currentId=null;lockForms();message('تم تسجيل الخروج')};
 function lockForms(){window.riwaqAdminEnabled=!visitorMode;for(const id of ['learn','teach','impact']){document.querySelectorAll('#'+id+' input,#'+id+' textarea,#'+id+' select').forEach(x=>{x.disabled=visitorMode})}if(!visitorMode){$('element').disabled=!$('dimension').value;$('observation-element').disabled=!$('observation-dimension').value}tool.hidden=!admin;portal.hidden=true;login.hidden=true;logout.hidden=true;document.querySelectorAll('nav button[data-page]').forEach(b=>{if(b.dataset.page!=='home')b.hidden=visitorMode});document.querySelectorAll('[data-go]').forEach(b=>b.hidden=!admin);if(visitorMode){document.querySelectorAll('main section').forEach(x=>x.hidden=x.id!=='home');document.querySelectorAll('nav button[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page==='home'))}else if(admin){const page=currentPage();const target=document.querySelector('#'+page);if(target)target.prepend(tool)}$('riwaq-status').textContent=admin?'وضع الإدارة: يمكنك إضافة الجولات وحفظها، ولا يظهر للزوار إلا الملخص المعتمد.':'وضع الزائر: عرض النتائج المنشورة فقط.';}
 async function loadPublic(){try{
- const {data,error}=await client.from('riwaq_publications').select('id,title,summary,round_type,published_at').order('published_at',{ascending:false}).limit(100);
+ const {data,error}=await client.from('riwaq_publications').select('id,title,summary,round_type,published_at,metrics').order('published_at',{ascending:false}).limit(100);
  if(error)throw error;
  const box=$('riwaq-public-list');box.replaceChildren();
  if(!data.length)box.textContent='لم تُنشر جولات على الموقع بعد.';
@@ -84,7 +84,7 @@ function renderHomeRounds(publications=null){
   const localRows=local.filter(x=>x.page===page);
   const unique=new Map();
   cloud.forEach(x=>unique.set('pub:'+x.id,{title:x.title,id:x.id,public:true}));
-  localRows.forEach(x=>{if(x.publicationId)unique.delete('pub:'+x.publicationId);unique.set('local:'+x.id,{title:x.title,id:x.id,page,public:!!x.publicationId})});
+  localRows.forEach(x=>{const matching=cloud.find(p=>p.id===x.publicationId||p.metrics?.source_id===x.id);if(matching){unique.delete('pub:'+matching.id);unique.set('pub:'+matching.id,{title:matching.title,id:matching.id,public:true});}else unique.set('local:'+x.id,{title:x.title,id:x.id,page,public:false})});
   if(stats[index])stats[index].textContent=unique.size;
   let names=box.querySelector('.riwaq-round-names');
   if(!names){names=document.createElement('div');names.className='riwaq-round-names';names.style.cssText='margin-top:12px;border-top:1px solid #eee;padding-top:10px;font-size:14px';box.append(names)}
@@ -177,9 +177,26 @@ function openPublishedRound(d){
  const school=document.createElement('p');school.textContent='مدرسة الحزم للتعليم الأساسي (1–4) | رواق الحزم التربوي';
  const title=document.createElement('h2');title.textContent=d.title;
  const category=document.createElement('p');category.textContent=d.round_type==='teaching'?'جولة تدريس':d.round_type==='impact'?'تقرير قياس الأثر':'جولة تعلم';
- const summary=document.createElement('div');summary.textContent=d.summary||'لا يوجد ملخص منشور';summary.style.cssText='white-space:pre-wrap;background:#f8f6fb;border-radius:10px;padding:16px';
- const date=document.createElement('p');date.style.cssText='font-size:13px;color:#665a6c';date.textContent=d.published_at?'تاريخ النشر: '+new Date(d.published_at).toLocaleDateString('ar-OM'):'';
- report.append(top,school,title,category,summary,date);
+ const date=document.createElement('p');date.style.cssText='font-size:13px;color:#665a6c';date.textContent=d.metrics?.date?'تاريخ الجولة: '+d.metrics.date:d.published_at?'تاريخ النشر: '+new Date(d.published_at).toLocaleDateString('ar-OM'):'';
+ report.append(top,school,title,category,date);
+ const saved=d.metrics?.values;
+ if(Array.isArray(saved)&&saved.length){
+  const teachLabels=['فريق المادة','التاريخ / الحصة','الصف','المعلم المضيف','الميسر','الملاحظون (أعضاء الفريق)','البعد المستهدف','العنصر','موعد الحصة','مبرر اختيار العنصر','نقاط القوة بعد الجولة','فرص التحسين بعد الجولة','التوصيات العملية القابلة للتنفيذ','البعد في بطاقة الملاحظة','العنصر في بطاقة الملاحظة','الأدلة والملاحظات الصفية','الترميز (1–5)','التوصيات'];
+  const genericLabels=d.round_type==='learning'?['التاريخ','اليوم','بؤرة الجولة','الصفوف','عدد الصفوف','فريق الجولة','سؤال الجولة','ممارسات المعلمة','ممارسات الطلبة','الشواهد الموضوعية','الأنماط المشتركة']:null;
+  const labels=d.round_type==='teaching'?teachLabels:genericLabels||[];
+  const heading=document.createElement('h3');heading.textContent=d.round_type==='teaching'?'استمارة التخطيط وبطاقة الملاحظة الصفية':'تفاصيل الجولة';report.append(heading);
+  saved.forEach((v,i)=>{
+    const value=typeof v==='string'?v:(v?.value??'');
+    if(!String(value).trim())return;
+    if(i===13&&d.round_type==='teaching'){const div=document.createElement('h3');div.textContent='بطاقة الملاحظة الصفية';div.style.cssText='margin-top:20px;border-top:2px solid #e5dceb;padding-top:15px';report.append(div)}
+    const field=document.createElement('section');field.style.cssText='break-inside:avoid;margin:10px 0';
+    const label=document.createElement('strong');label.textContent=labels[i]||'بيان '+(i+1);
+    const body=document.createElement('div');body.textContent=String(value);body.style.cssText='white-space:pre-wrap;background:#f8f6fb;border-radius:8px;padding:10px 12px;margin-top:4px';
+    field.append(label,body);report.append(field);
+  });
+ }else{
+   const summary=document.createElement('div');summary.textContent=d.summary||'لا يوجد ملخص منشور';summary.style.cssText='white-space:pre-wrap;background:#f8f6fb;border-radius:10px;padding:16px';report.append(summary);
+ }
  overlay.append(report);overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove()});
  document.body.append(overlay);
 }
