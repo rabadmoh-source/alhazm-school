@@ -58,11 +58,13 @@ function setupBackupControls(){
  panel.querySelector('#riwaq-import').onclick=()=>panel.querySelector('#riwaq-import-file').click();
  panel.querySelector('#riwaq-import-file').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const n=await importRiwaqBackup(f);panel.querySelector('#riwaq-backup-status').textContent='تم استيراد النسخة. إجمالي السجلات: '+n;renderHomeRounds()}catch(err){panel.querySelector('#riwaq-backup-status').textContent='تعذّر الاستيراد: '+err.message}finally{e.target.value=''}};
 }
-function renderHomeRounds(publications=[]){
+let lastPublications=[];
+function renderHomeRounds(publications=null){
+ if(Array.isArray(publications))lastPublications=publications;
+ publications=lastPublications;
  const local=visitorMode?[]:getDrafts();
  const types=[['learn','learning',0],['teach','teaching',1],['impact','impact',2]];
  const stats=[...document.querySelectorAll('#home .stat')];
- const home=document.getElementById('home');
  const tiles=stats.map(x=>x.closest('.card'));
  for(const [page,remoteType,index] of types){
   const box=tiles[index];if(!box)continue;
