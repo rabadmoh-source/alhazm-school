@@ -59,7 +59,7 @@ body.service-expanded #fullView{display:none!important}
 <script>
 const services=[
 {id:'visitor',icon:'👥',name:'نافذة الزوار',desc:'الدخول إلى النسخة المخصصة للزوار للاطلاع على خدمات بوابة الحزم الرقمية.',tags:['teachers','parents','admin'],active:true},
-{id:'certificates',icon:'🎓',name:'صانع شهادات الحزم',desc:'نماذج شهادات فخمة مع محرر حر وإصدار جماعي وتصدير PNG وPDF.',tags:['teachers'],active:true},
+
 
 {id:'clock',icon:'🕒',name:'ساعة الحزم المدرسية الذكية',desc:'الساعة والبرنامج اليومي وجداول المعلمات وغياب المعلمات والاحتياط والمناوبة.',tags:['teachers','admin'],active:true},
 {id:'compass',icon:'🧭',name:'بوصلة الحزم الاستراتيجية',desc:'الرؤية والرسالة والقيم والأهداف الاستراتيجية والسنوية ومصفوفة الترابط.',tags:['teachers','admin'],active:true},
@@ -134,7 +134,6 @@ function openService(s){
  if(s.id==='activities'){window.location.href='./activities-padlet-board.html?type=initiatives';return;}
  if(s.id==='visitor'){window.location.href='./visitor.html';return;}
  if(s.id==='riwaq'){window.location.href='./riwaq-alhazm.html';return;}
- if(s.id==='certificates'){window.location.href='./certificates-studio.html';return;}
  if(s.id==='nabd'){
   activeService=s.id;
   document.querySelector('main .hero').classList.add('hide');
