@@ -119,7 +119,7 @@ function openService(s){
  document.getElementById('serviceFrame').srcdoc=decodeEmbedded(serviceBinary[s.id]);
  window.scrollTo(0,0);
 }
-function returnPortal(){document.body.classList.remove('service-expanded');activeService=null;document.getElementById('serviceFrame').removeAttribute('srcdoc');document.getElementById('serviceFrame').removeAttribute('src');document.getElementById('embeddedService').classList.add('hide');document.querySelector('main .hero').classList.remove('hide');document.querySelector('.grid4').classList.remove('hide');for(const sec of document.querySelectorAll('main.wrap > section'))if(sec.id!=='embeddedService')sec.classList.remove('hide');window.scrollTo(0,0)}
+function returnPortal(){const pdLink=document.getElementById('hazmProfessionalDevelopmentDocsLink');if(pdLink)pdLink.style.display='none';document.body.classList.remove('service-expanded');activeService=null;document.getElementById('serviceFrame').removeAttribute('srcdoc');document.getElementById('serviceFrame').removeAttribute('src');document.getElementById('embeddedService').classList.add('hide');document.querySelector('main .hero').classList.remove('hide');document.querySelector('.grid4').classList.remove('hide');for(const sec of document.querySelectorAll('main.wrap > section'))if(sec.id!=='embeddedService')sec.classList.remove('hide');window.scrollTo(0,0)}
 document.getElementById('returnPortal').onclick=returnPortal;
 document.getElementById('fullView').onclick=()=>{const f=document.getElementById('serviceFrame');if(f.requestFullscreen)f.requestFullscreen();else{f.style.height=f.style.height==='95vh'?'78vh':'95vh'}};
 
