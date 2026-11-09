@@ -6,18 +6,22 @@ const DB='alhazm_activities_2026_v1';
 const isDevelopmentBoard=/professional-development-board\.html$/i.test(location.pathname);
 const isPartnershipBoard=/community-partnerships-board\.html$/i.test(location.pathname);
 const isCommunityInitiativesBoard=/community-initiatives-board\.html$/i.test(location.pathname);
-const isStandaloneBoard=isDevelopmentBoard||isPartnershipBoard||isCommunityInitiativesBoard;
-const section=isPartnershipBoard?'community_partnerships':isCommunityInitiativesBoard?'community_initiatives':isDevelopmentBoard?'professional_development':(new URLSearchParams(location.search).get('type')==='activities'?'activities':'initiatives');
-const boardName=isPartnershipBoard?'الشراكات المجتمعية':isCommunityInitiativesBoard?'المبادرات المجتمعية':isDevelopmentBoard?'توثيق الإنماء المهني':null;
+const isSafetyBoard=/safety-padlet-board\.html$/i.test(location.pathname);
+const safetySections={inspections:'الجولات التفقدية',guard:'متابعة الحارس',evacuation:'الإخلاء والطوارئ',awareness:'التوعية والأنشطة'};
+const safetyKey=new URLSearchParams(location.search).get('section');
+const validSafetyKey=Object.prototype.hasOwnProperty.call(safetySections,safetyKey)?safetyKey:'inspections';
+const isStandaloneBoard=isDevelopmentBoard||isPartnershipBoard||isCommunityInitiativesBoard||isSafetyBoard;
+const section=isSafetyBoard?'safety_'+validSafetyKey:isPartnershipBoard?'community_partnerships':isCommunityInitiativesBoard?'community_initiatives':isDevelopmentBoard?'professional_development':(new URLSearchParams(location.search).get('type')==='activities'?'activities':'initiatives');
+const boardName=isSafetyBoard?safetySections[validSafetyKey]:isPartnershipBoard?'الشراكات المجتمعية':isCommunityInitiativesBoard?'المبادرات المجتمعية':isDevelopmentBoard?'توثيق الإنماء المهني':null;
 const visitorMode=new URLSearchParams(location.search).get('visitor')==='1';
 if(isStandaloneBoard){
- const tabs=document.querySelector('.tabs');if(tabs){const back=document.getElementById('backToPortal');if(back)back.href= new URLSearchParams(location.search).get('visitor')==='1'?'./visitor.html':'./index.html';}
+ const tabs=document.querySelector('.tabs');if(tabs){const back=document.getElementById('backToPortal');if(back)back.href=isSafetyBoard?'./safety-shield.html':(new URLSearchParams(location.search).get('visitor')==='1'?'./visitor.html':'./index.html');}
 }
 if(visitorMode){
  const a=document.getElementById('activitiesTab'),i=document.getElementById('initiativesTab'),back=document.getElementById('backToPortal');
  if(a)a.href='?type=activities&visitor=1';
  if(i)i.href='?type=initiatives&visitor=1';
- if(back)back.href='./visitor.html';
+ if(back)back.href=isSafetyBoard?'./safety-shield.html':'./visitor.html';
  const heading=document.querySelector('header h1');
  if(heading)heading.textContent=boardName?'💜 '+boardName+' — عرض الزوار':'💜 لوحة الحزم | الأنشطة والمبادرات — عرض الزوار';
 }
@@ -49,6 +53,30 @@ authButton.onclick=async()=>{if(admin){token='';admin=false;user=null;sessionSto
 const credentials=await getCredentials();if(!credentials)return;
 try{const out=await call('/auth/v1/token?grant_type=password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(credentials)});token=out.access_token;await verify();if(!admin){note('الحساب غير مصرح له بإدارة لوحة الحزم.')}else sessionStorage.setItem('hazm_board_access',token);await load()}catch(e){token='';note('تعذر تسجيل الدخول: '+e.message)}};
 function localRead(){return new Promise(resolve=>{try{const req=indexedDB.open(DB);req.onupgradeneeded=()=>req.transaction.abort();req.onerror=()=>resolve([]);req.onsuccess=()=>{const db=req.result;const names=Array.from(db.objectStoreNames);if(!names.length)return resolve([]);const t=db.transaction(names[0],'readonly');const q=t.objectStore(names[0]).getAll();q.onsuccess=()=>resolve((q.result||[]).filter(x=>x.type===section));q.onerror=()=>resolve([])}}catch{resolve([])}})}
+function readSafetyLegacy(){
+ if(!isSafetyBoard||visitorMode)return [];
+ try{
+  const data=JSON.parse(localStorage.getItem('alhazm_safety_records_v1')||'[]');
+  if(!Array.isArray(data))return [];
+  return data.filter(r=>r&&r.section===validSafetyKey).map((r,i)=>{
+   const details=[
+    r.date?'تاريخ التنفيذ: '+r.date:'',
+    r.nextDate?'المتابعة القادمة: '+r.nextDate:'',
+    r.location?'الموقع / الفئة: '+r.location:'',
+    r.owner?'المسؤولة: '+r.owner:'',
+    r.status?'حالة التنفيذ: '+r.status:'',
+    r.priority?'الأولوية: '+r.priority:'',
+    r.notes?'الملاحظات: '+r.notes:'',
+    r.results?'النتائج والتحسين: '+r.results:'',
+    r.evidence?'الأدلة: '+r.evidence:''
+   ].filter(Boolean).join('\\n');
+   const files=(Array.isArray(r.photos)?r.photos:[]).filter(p=>p&&typeof p.data==='string'&&p.data.startsWith('data:image/')).map((p,j)=>({
+    name:'صورة توثيق '+(j+1)+'.jpg',description:p.caption||'شاهد مصور',data:p.data
+   }));
+   return {id:'safety-legacy-'+String(r.id||i),title:r.title||'سجل متابعة سابق',goal:details,details,files,type:section};
+  });
+ }catch(e){return []}
+}
 async function load(){message('جارٍ تحميل البيانات من التخزين المركزي...');authButton.textContent=admin?'تسجيل خروج الإدارة':'دخول الإدارة';try{
 columns=await query('hazm_board_columns','select=*&section=eq.'+section+'&order=position.asc,created_at.asc');
 if(visitorMode)columns=columns.filter(x=>x.published);
@@ -56,13 +84,13 @@ const ids=columns.map(x=>x.id);
 posts=ids.length?await query('hazm_board_posts','select=*&column_id=in.('+ids.join(',')+')&order=position.asc,created_at.asc'):[];
 if(visitorMode)posts=posts.filter(x=>x.published);
 const postids=posts.map(x=>x.id);attachments=postids.length?await query('hazm_board_attachments','select=*&post_id=in.('+postids.join(',')+')'):[];
-locals=admin&&!isStandaloneBoard?await localRead():[];draw();
-}catch(e){message('تعذر الاتصال بالسحابة: '+e.message+'. البيانات المحلية لم تُحذف.');locals=admin&&!isStandaloneBoard?await localRead():[];columns=[];posts=[];attachments=[];draw()}}
+locals=isSafetyBoard?readSafetyLegacy():(admin&&!isStandaloneBoard?await localRead():[]);draw();
+}catch(e){message('تعذر الاتصال بالسحابة: '+e.message+'. البيانات المحلية لم تُحذف.');locals=isSafetyBoard?readSafetyLegacy():(admin&&!isStandaloneBoard?await localRead():[]);columns=[];posts=[];attachments=[];draw()}}
 function makeButton(label,action,css=''){const b=el('button',css,label);b.onclick=action;return b}
 async function fileLink(a){try{const r=await call('/storage/v1/object/sign/'+a.storage_bucket+'/'+a.storage_path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({expiresIn:3600})});if(r.signedURL){const signed=r.signedURL.startsWith('http')?r.signedURL:URL+'/storage/v1'+(r.signedURL.startsWith('/')?'':'/')+r.signedURL;return signed}throw Error('تعذر إنشاء رابط الملف')}catch(e){note('تعذر فتح المرفق: '+e.message);return null}}
 function renderAttachment(a,host){if(isImage(a)){const img=el('img');img.alt=a.filename||'شاهد';img.loading='lazy';img.style.cursor='zoom-in';img.onclick=async()=>{const signed=await fileLink(a);if(!signed)return;$('zoomImage').src=signed;$('viewer').classList.add('on')};host.append(img);fileLink(a).then(link=>{if(link)img.src=link}).catch(()=>{})}else host.append(makeButton('عرض المرفق: '+a.filename,async()=>{const signed=await fileLink(a);if(signed)window.open(signed,'_blank','noopener')}))}
 function localFile(f,host){if(typeof f.data==='string'&&f.data.startsWith('data:image/')){const img=el('img');img.src=f.data;img.loading='lazy';img.onclick=()=>{$('zoomImage').src=f.data;$('viewer').classList.add('on')};host.append(img)}else if(f.data)host.append(makeButton('فتح المرفق',()=>{const a=el('a');a.href=f.data;a.download=f.name||'ملف';a.click()}))}
-function renderLane(c,isLocal=false){const lane=el('section','lane'),head=el('div','head');head.append(el('h2','',c.title||'بدون عنوان'));if(isLocal)head.append(el('div','meta','محفوظ على هذا المتصفح فقط، ولم يُنقل للسحابة'));const cover=posts.find(p=>p.column_id===c.id&&p.kind==='description'&&p.published&&attachments.some(a=>a.post_id===p.id&&isImage(a)));head.append(el('p','',isLocal?(c.goal||''):(cover?'':c.description||'')));const ops=el('div','row');
+function renderLane(c,isLocal=false){const lane=el('section','lane'),head=el('div','head');head.append(el('h2','',c.title||'بدون عنوان'));if(isLocal)head.append(el('div','meta',isSafetyBoard?'سجل سابق محفوظ على هذا الجهاز؛ يمكنك نقله للسحابة من حساب الإدارة':'محفوظ على هذا المتصفح فقط، ولم يُنقل للسحابة'));const cover=posts.find(p=>p.column_id===c.id&&p.kind==='description'&&p.published&&attachments.some(a=>a.post_id===p.id&&isImage(a)));head.append(el('p','',isLocal?(c.goal||''):(cover?'':c.description||'')));const ops=el('div','row');
 if(!isLocal&&admin){ops.append(makeButton('تعديل العمود',()=>editColumn(c)),makeButton(c.published?'إلغاء النشر':'نشر العمود',()=>setPublished('hazm_board_columns',c,!c.published)),makeButton('حذف العمود',()=>removeColumn(c),'danger'))}
 if(isLocal&&admin){const exists=columns.some(x=>x.source_local_id===String(c.id));if(!exists)ops.append(makeButton('نقل للسحابة',()=>importLocal(c)));else ops.append(el('small','', 'نُقل للسحابة ✓'))}
 head.append(ops);lane.append(head);
@@ -77,7 +105,7 @@ for(const p of posts.filter(x=>x.column_id===c.id&&x.kind!=='description')){cons
 if(admin)lane.append(makeButton('＋ إضافة دليل أسفل العمود',()=>newPost(c),'add'))}
 $('board').append(lane)}
 function draw(){const board=$('board');board.replaceChildren();const remoteIds=new Set(columns.map(x=>x.source_local_id));columns.forEach(x=>renderLane(x));locals.filter(x=>!remoteIds.has(String(x.id))).forEach(x=>renderLane(x,true));if(admin)board.append(makeButton('＋ إضافة عمود جديد',()=>newColumn(),'new'));
-importInfo.textContent=admin?'إدارة موثقة • التخزين السحابي مفعّل • سجلات المتصفح القديمة متاحة للنقل اليدوي':'عرض المحتوى المنشور • للدخول الإداري استخدمي حساب الحزم المعتمد';
+importInfo.textContent=admin?'إدارة موثقة • التخزين السحابي مفعّل • يمكن نقل السجلات السابقة بعد مراجعتها':'المحتوى السحابي المنشور، والسجلات المحلية السابقة على هذا الجهاز فقط • للدخول الإداري استخدمي حساب الحزم';
 message((boardName||(section==='activities'?'الأنشطة':'المبادرات'))+' — '+columns.length+' أعمدة سحابية، '+locals.filter(x=>!remoteIds.has(String(x.id))).length+' أعمدة محلية لم تُنقل. لكل عمود توصيف ثابت وأدلة مرتبة أسفله.')}
 async function setPublished(table,r,published){try{await update(table,r.id,{published});await load()}catch(e){note(e.message)}}
 function form(title,name='',desc='',isPost=false,imageSelected=false,hasImage=false){return new Promise(resolve=>{
