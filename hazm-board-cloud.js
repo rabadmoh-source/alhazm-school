@@ -4,6 +4,7 @@ const URL='https://fmmilquujleokfxcbnas.supabase.co';
 const KEY='sb_publishable_O_JqIM-VqzdGgU8VTvhRHQ_eQ9eTH5R';
 const DB='alhazm_activities_2026_v1';
 const section=new URLSearchParams(location.search).get('type')==='activities'?'activities':'initiatives';
+const visitorMode=new URLSearchParams(location.search).get('visitor')==='1';
 const $=id=>document.getElementById(id);
 let token=sessionStorage.getItem('hazm_board_access')||'',user=null,admin=false,columns=[],posts=[],attachments=[],locals=[],mode='',current=null,selectedPost=null;
 function el(tag,cls,content){const n=document.createElement(tag);if(cls)n.className=cls;if(content!==undefined)n.textContent=content;return n}
@@ -83,5 +84,5 @@ let done=0;for(const record of relevant){await importLocal(record);done++}
 note('تمت مراجعة '+done+' سجلات. تحققي من ظهور المرفقات قبل نشرها.')}catch(e){note('تعذر الاستيراد: '+e.message)}finally{backupInput.value=''}};
 
 $('closeViewer').onclick=()=>{$('viewer').classList.remove('on');$('zoomImage').removeAttribute('src')};
-verify().then(load);
+if(visitorMode){token='';admin=false;user=null;authButton.remove();importBtn.remove();load()}else verify().then(load);
 })();
