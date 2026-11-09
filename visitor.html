@@ -97,7 +97,7 @@ let activeService=null;
 function decodeEmbedded(b64){const raw=atob(b64);return new TextDecoder('utf-8').decode(Uint8Array.from(raw,c=>c.charCodeAt(0)))}
 function openService(s){
  let pdDocLink=document.getElementById('hazmProfessionalDevelopmentDocsLink');
- if(!pdDocLink){pdDocLink=document.createElement('a');pdDocLink.id='hazmProfessionalDevelopmentDocsLink';pdDocLink.className='btn teal';pdDocLink.textContent='📚 توثيق الإنماء المهني | لوحة البادليت';pdDocLink.href='./professional-development-board.html?visitor=1';pdDocLink.style.cssText='display:none;text-decoration:none;';const heading=document.getElementById('serviceHeading');if(heading)heading.after(pdDocLink);}
+ if(!pdDocLink){pdDocLink=document.createElement('a');pdDocLink.id='hazmProfessionalDevelopmentDocsLink';pdDocLink.className='btn teal';pdDocLink.textContent='📚 توثيق الإنماء المهني | لوحة البادليت';pdDocLink.href='./professional-development-board.html?visitor=1';pdDocLink.style.cssText='display:none;text-decoration:none;position:fixed;right:12px;top:85px;z-index:100000;max-width:155px;white-space:normal;text-align:center;line-height:1.6;box-shadow:0 5px 18px #0002;';document.body.append(pdDocLink);}
  pdDocLink.style.display=s.id==='pd'?'inline-flex':'none';
  if(s.id==='activities'){window.location.href='./activities-padlet-board.html?type=initiatives&visitor=1';return;}
  if(s.id==='riwaq'){window.location.href='./riwaq-alhazm.html?visitor=1';return;}
