@@ -119,7 +119,7 @@ function openService(s){
      const doc=frame.contentDocument;if(!doc)return;
      if(!doc.getElementById('hazmFamilyMovedNavCss')){
       const css=doc.createElement('style');css.id='hazmFamilyMovedNavCss';
-      css.textContent='#nav [data-tab="overview"],#nav [data-tab="matrix"],#nav [data-tab="impacts"]{display:none!important}';
+      css.textContent='aside{display:none!important}main{margin-right:0!important;width:100%!important;max-width:none!important}@media(max-width:850px){main{margin:0!important}}';
       doc.head.append(css);
      }
      doc.getElementById('nav')?.addEventListener('click',()=>queueMicrotask(syncMoved));
