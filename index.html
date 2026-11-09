@@ -95,6 +95,36 @@ function openService(s){
    side.append(label);
    const links=s.id==='pd'?[['📚 فتح لوحة التوثيق','./professional-development-board.html']]:[['🤝 الشراكات المجتمعية','./community-partnerships-board.html'],['🌱 المبادرات المجتمعية','./community-initiatives-board.html']];
    for(const [name,href] of links){const link=document.createElement('a');link.className='btn teal';link.href=href;link.textContent=name;side.append(link)}
+   if(s.id==='family'){
+    const moved=[['overview','نظرة عامة'],['matrix','مصفوفة الترابط'],['impacts','الأثر على تعلم الطلبة']];
+    const movedButtons=[];
+    for(const [id,label] of moved){
+     const btn=document.createElement('button');btn.type='button';btn.className='hazmFamilyMovedNav';btn.textContent=label;btn.dataset.tab=id;
+     btn.style.cssText='background:#fff;border:0;border-radius:12px;color:#50436c;padding:12px 6px;text-align:center;line-height:1.6;cursor:pointer';
+     btn.onclick=()=>{const doc=frame.contentDocument;const target=doc?.querySelector('#nav [data-tab="'+id+'"]');if(target){target.click();syncMoved()}};
+     side.append(btn);movedButtons.push(btn);
+    }
+    function syncMoved(){
+     const doc=frame.contentDocument;if(!doc)return;
+     for(const btn of movedButtons){
+      const source=doc.querySelector('#nav [data-tab="'+btn.dataset.tab+'"]');
+      const active=!!source?.classList.contains('active');
+      btn.style.background=active?'#eee8f7':'#fff';
+      btn.setAttribute('aria-current',active?'page':'false');
+     }
+    }
+    frame.addEventListener('load',function familyMovedOnLoad(){
+     if(!frame.isConnected||!document.getElementById('hazmPdSidePanel')?.contains(movedButtons[0]))return;
+     const doc=frame.contentDocument;if(!doc)return;
+     if(!doc.getElementById('hazmFamilyMovedNavCss')){
+      const css=doc.createElement('style');css.id='hazmFamilyMovedNavCss';
+      css.textContent='#nav [data-tab="overview"],#nav [data-tab="matrix"],#nav [data-tab="impacts"]{display:none!important}';
+      doc.head.append(css);
+     }
+     doc.getElementById('nav')?.addEventListener('click',()=>queueMicrotask(syncMoved));
+     syncMoved();
+    },{once:true});
+   }
    frame.parentNode.insertBefore(pdWrap,frame);pdWrap.append(side,frame);
   }
  }else if(pdWrap){
