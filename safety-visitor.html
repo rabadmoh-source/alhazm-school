@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>درع الحزم | نافذة الزوار</title>
+<style>
+:root{--purple:#70558d;--teal:#188f90;--ink:#293047;--bg:#f9f8fc}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,Arial,sans-serif}
+.brandbar{display:flex;align-items:center;gap:12px;background:#fff;border-top:5px solid var(--teal);border-bottom:1px solid #e5dfea;padding:12px 20px}
+.brandbar img{height:56px;width:56px;object-fit:contain}
+.brandbar strong{display:block;color:#55416f;font-size:17px}
+.brandbar small{color:#687286;font-size:12px}
+.layout{display:flex;min-height:calc(100vh - 86px)}
+aside{width:244px;flex:0 0 244px;background:linear-gradient(160deg,#44345f,#665181);padding:22px 12px;color:#fff}
+aside h1{font-size:22px;margin:0 8px 2px}
+aside p{font-size:12px;opacity:.85;margin:0 8px 24px}
+.nav button{display:flex;align-items:center;gap:12px;text-align:right;width:100%;border:0;color:#fff;background:transparent;border-radius:13px;font:700 15px/1.6 Tahoma,Arial,sans-serif;padding:13px 14px;cursor:pointer;margin:5px 0}
+.nav button.active,.nav button:hover{background:#ffffff2b}
+.nav .ico{font-size:21px}
+main{flex:1;min-width:0;padding:20px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:3px 0 14px;border-bottom:1px solid #e5dfea;flex-wrap:wrap}
+.header h2{font-size:19px;margin:0}
+.back{background:var(--purple);color:#fff;text-decoration:none;border-radius:12px;font-size:14px;font-weight:bold;padding:11px 16px}
+.info{color:#665a76;font-size:13px;margin:14px 0}
+iframe{display:block;width:100%;height:calc(100vh - 176px);min-height:550px;border:0;border-radius:12px;background:var(--bg)}
+@media(max-width:850px){.layout{display:block;min-height:0}aside{width:auto;padding:14px}.nav{display:flex;overflow-x:auto;gap:5px}.nav button{min-width:max-content;width:auto;margin:0}aside h1{font-size:19px}aside p{margin-bottom:12px}main{padding:12px}iframe{height:75vh;min-height:490px}}
+</style></head><body>
+<div class="brandbar"><img src="./alhazm-school-logo.png" alt="شعار المدرسة"><div><strong>مدرسة الحزم للتعليم الأساسي (١–٤)</strong><small>بوابة الحزم الرقمية · درع الحزم · نافذة الزوار</small></div></div>
+<div class="layout"><aside><h1>🛡️ درع الحزم</h1><p>الأمن والسلامة · الاطلاع على المحتوى المنشور</p><nav class="nav" id="nav" aria-label="أقسام درع الحزم"></nav></aside>
+<main><div class="header"><h2 id="heading">الجولات التفقدية</h2><a class="back" href="./visitor.html">↩ العودة إلى بوابة الزوار</a></div><p class="info">تعرض هذه النافذة السجلات والأدلة المنشورة فقط، وتتزامن تلقائيًا مع إدارة درع الحزم.</p><iframe id="boardFrame" title="توثيق درع الحزم المنشور"></iframe></main></div>
+<script>
+(()=>{
+'use strict';
+const sections=[
+['inspections','🔎','الجولات التفقدية'],
+['guard','🛡️','متابعة الحارس'],
+['evacuation','🚨','الإخلاء والطوارئ'],
+['awareness','🌱','التوعية والأنشطة']
+];
+const nav=document.getElementById('nav'),frame=document.getElementById('boardFrame'),heading=document.getElementById('heading');
+let active='';
+const safeSection=key=>sections.some(x=>x[0]===key)?key:'inspections';
+function show(key){
+key=safeSection(key);
+active=key;
+const info=sections.find(x=>x[0]===key);
+heading.textContent=info[2];
+nav.querySelectorAll('button').forEach(b=>{b.classList.toggle('active',b.dataset.section===key);b.setAttribute('aria-current',b.dataset.section===key?'page':'false')});
+frame.title=info[2]+' — عرض الزوار';
+frame.src='./safety-approved/safety-padlet-board.html?visitor=1&embedded=1&section='+encodeURIComponent(key);
+history.replaceState(null,'','?section='+encodeURIComponent(key));
+}
+sections.forEach(([key,icon,label])=>{const b=document.createElement('button');b.type='button';b.dataset.section=key;b.innerHTML='<span class="ico">'+icon+'</span><span>'+label+'</span>';b.addEventListener('click',()=>show(key));nav.append(b)});
+show(new URLSearchParams(location.search).get('section')||'inspections');
+})();
+</script></body></html>
