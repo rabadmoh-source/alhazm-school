@@ -52,4 +52,4 @@ history.replaceState(null,'','?section='+encodeURIComponent(key));
 sections.forEach(([key,icon,label])=>{const b=document.createElement('button');b.type='button';b.dataset.section=key;b.innerHTML='<span class="ico">'+icon+'</span><span>'+label+'</span>';b.addEventListener('click',()=>show(key));nav.append(b)});
 show(new URLSearchParams(location.search).get('section')||'inspections');
 })();
-</script></body></html>
+</script><script src="./hazm-visitor-indicator.js?v=20261109-visitor-badge1" defer></script></body></html>
