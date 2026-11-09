@@ -216,13 +216,18 @@ async function publishRound(record){
  await loadPublic();
  return true;
 }
+let syncRunning=false;
 async function syncExistingRounds(){
- if(!client||visitorMode)return;
- try{const {data}=await client.auth.getUser();if(!data?.user)return;
- const {data:a}=await client.from('riwaq_admins').select('user_id').eq('user_id',data.user.id).maybeSingle();
- if(!a)return;
- for(const record of getDrafts().filter(r=>!r.publicationId)){try{await publishRound(record)}catch(e){console.warn('round sync failed',e.message)}}
+ if(!client||visitorMode||syncRunning)return;
+ syncRunning=true;
+ try{
+  const {data}=await client.auth.getUser();if(!data?.user)return;
+  const {data:a,error}=await client.from('riwaq_admins').select('user_id').eq('user_id',data.user.id).maybeSingle();
+  if(error||!a)return;
+  const pending=getDrafts().filter(r=>!r.publicationId);
+  for(const record of pending){try{await publishRound(record)}catch(e){console.warn('round sync failed',e.message)}}
  }catch(e){console.warn('sync unavailable',e.message)}
+ finally{syncRunning=false}
 }
 
 // Photos are optional and stored separately in browser IndexedDB so their size never prevents saving a round.
