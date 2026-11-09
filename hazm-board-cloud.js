@@ -9,7 +9,7 @@ let token=sessionStorage.getItem('hazm_board_access')||'',user=null,admin=false,
 function el(tag,cls,content){const n=document.createElement(tag);if(cls)n.className=cls;if(content!==undefined)n.textContent=content;return n}
 function message(s){$('message').textContent=s}
 function note(s){alert(s)}
-function requestHeaders(extra={}){return {'apikey':KEY,'Authorization':'Bearer '+(token||KEY),...extra}}
+function requestHeaders(extra={}){return {'apikey':KEY,...(token?{'Authorization':'Bearer '+token}:{}),...extra}}
 async function call(path,options={}){const r=await fetch(URL+path,{...options,headers:requestHeaders(options.headers||{})});const raw=await r.text();let data;try{data=raw?JSON.parse(raw):null}catch{data=raw}if(!r.ok)throw Error((data&& (data.message||data.msg||data.error_description||data.error))||'HTTP '+r.status);return data}
 function esc(s){return encodeURIComponent(s)}
 async function query(table,params){return await call('/rest/v1/'+table+'?'+params)}
