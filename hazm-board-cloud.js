@@ -59,7 +59,12 @@ if(!isLocal&&admin){ops.append(makeButton('تعديل العمود',()=>editColu
 if(isLocal&&admin){const exists=columns.some(x=>x.source_local_id===String(c.id));if(!exists)ops.append(makeButton('نقل للسحابة',()=>importLocal(c)));else ops.append(el('small','', 'نُقل للسحابة ✓'))}
 head.append(ops);lane.append(head);
 if(isLocal){const d=el('article','post');d.append(el('h3','','بطاقة التوصيف'));d.append(el('div','txt',c.goal||c.details||'لا يوجد توصيف'));lane.append(d);(c.files||[]).forEach((f,i)=>{const post=el('article','post');post.append(el('h3','',f.description||f.name||'شاهد '+(i+1)));localFile(f,post);lane.append(post)})}
-else{const d=el('article','post');d.append(el('h3','','بطاقة التوصيف'));d.append(el('div','txt',c.description||'لم يُدرج توصيف بعد'));lane.append(d);
+else{const d=el('article','post');d.append(el('h3','','بطاقة التوصيف'));
+const descriptionPost=posts.find(x=>x.column_id===c.id&&x.kind==='description'&&x.published);
+const descriptionFiles=descriptionPost?attachments.filter(x=>x.post_id===descriptionPost.id&&isImage(x)):[];
+if(descriptionFiles.length){renderAttachment(descriptionFiles[descriptionFiles.length-1],d)}
+else d.append(el('div','txt',c.description||'لم يُدرج توصيف بعد'));
+lane.append(d);
 for(const p of posts.filter(x=>x.column_id===c.id&&x.kind!=='description')){const post=el('article','post');post.append(el('h3','',p.title||'منشور'));if(p.body)post.append(el('div','txt',p.body));for(const a of attachments.filter(x=>x.post_id===p.id))renderAttachment(a,post);if(admin){const ops=el('div','foot');const row=el('div');row.append(makeButton('تعديل',()=>editPost(c,p)),makeButton(p.published?'إلغاء نشر':'نشر',()=>setPublished('hazm_board_posts',p,!p.published)),makeButton('حذف',()=>removePost(p),'danger'));ops.append(el('span','','دليل'),row);post.append(ops)}lane.append(post)}
 if(admin)lane.append(makeButton('＋ إضافة دليل أسفل العمود',()=>newPost(c),'add'))}
 $('board').append(lane)}
@@ -67,9 +72,58 @@ function draw(){const board=$('board');board.replaceChildren();const remoteIds=n
 importInfo.textContent=admin?'إدارة موثقة • التخزين السحابي مفعّل • سجلات المتصفح القديمة متاحة للنقل اليدوي':'عرض المحتوى المنشور • للدخول الإداري استخدمي حساب الحزم المعتمد';
 message((section==='activities'?'الأنشطة':'المبادرات')+' — '+columns.length+' أعمدة سحابية، '+locals.filter(x=>!remoteIds.has(String(x.id))).length+' أعمدة محلية لم تُنقل. لكل عمود توصيف ثابت وأدلة مرتبة أسفله.')}
 async function setPublished(table,r,published){try{await update(table,r.id,{published});await load()}catch(e){note(e.message)}}
-function form(title,name='',desc='',isPost=false){return new Promise(resolve=>{mode=isPost?'post':'column';$('editorTitle').textContent=title;$('itemTitle').value=name;$('itemDesc').value=desc;$('itemDesc').parentElement.style.display='block';$('fileLabel').style.display=isPost?'block':'none';$('itemFile').value='';$('editor').classList.add('on');const finish=v=>{$('editor').classList.remove('on');$('save').onclick=null;$('cancel').onclick=null;resolve(v)};$('cancel').onclick=()=>finish(null);$('save').onclick=()=>finish({title:$('itemTitle').value.trim(),description:$('itemDesc').value.trim(),file:$('itemFile').files?.[0]||null})})}
-async function newColumn(){const f=await form('إضافة عمود جديد');if(!f)return;if(!f.title){note('العنوان مطلوب');return}try{await insert('hazm_board_columns',{section,title:f.title,description:f.description,position:columns.length,created_by:user.id,published:true});await load()}catch(e){note('فشل الحفظ: '+e.message)}}
-async function editColumn(c){const f=await form('تعديل العمود',c.title,c.description);if(!f)return;if(!f.title){note('العنوان مطلوب');return}try{await update('hazm_board_columns',c.id,{title:f.title,description:f.description,updated_at:new Date().toISOString()});await load()}catch(e){note(e.message)}}
+function form(title,name='',desc='',isPost=false,imageSelected=false,hasImage=false){return new Promise(resolve=>{
+mode=isPost?'post':'column';$('editorTitle').textContent=title;$('itemTitle').value=name;$('itemDesc').value=desc;$('itemFile').value='';
+const descLabel=$('itemDesc').parentElement, fileLabel=$('fileLabel'),file=$('itemFile');
+let choice=imageSelected?'image':'text';
+const rowChoice=el('div','row');rowChoice.style='margin-top:12px;gap:10px;align-items:center';
+const textChoice=el('label','','◉ توصيف كتابي'),imageChoice=el('label','','◉ توصيف بصورة');
+for(const x of [textChoice,imageChoice]){x.style='display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;background:#f6f1fa;padding:7px 10px;border-radius:10px'}
+const textRadio=el('input'),imageRadio=el('input');textRadio.type='radio';imageRadio.type='radio';textRadio.name=imageRadio.name='hazmDescriptionType';textRadio.value='text';imageRadio.value='image';
+textChoice.prepend(textRadio);imageChoice.prepend(imageRadio);rowChoice.append(textChoice,imageChoice);
+const hint=el('div','meta','يمكن الاكتفاء بصورة للتوصيف دون كتابة نص.');hint.style='margin:5px 0 0';
+const dialog=$('editor').querySelector('.dialog'),actions=dialog.querySelector('.row');
+if(!isPost){actions.before(rowChoice,hint)}
+const updateChoice=()=>{if(isPost){descLabel.style.display='block';fileLabel.style.display='block';file.accept='image/*,application/pdf,video/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx';fileLabel.firstChild.textContent='المرفق (اختياري عند التعديل)';return}
+choice=imageRadio.checked?'image':'text';descLabel.style.display=choice==='text'?'block':'none';fileLabel.style.display=choice==='image'?'block':'none';
+file.accept='image/*';fileLabel.firstChild.textContent='صورة التوصيف (JPG أو PNG أو WebP)';
+hint.textContent=choice==='image'?(hasImage?'الصورة الحالية محفوظة؛ اختاري صورة أخرى لاستبدالها، أو احفظي للإبقاء عليها.':'اختاري صورة للتوصيف، ولا يلزم إدخال نص.'):'أدخلي التوصيف الكتابي، ويمكن تغييره إلى صورة لاحقًا.'};
+textRadio.checked=choice==='text';imageRadio.checked=choice==='image';
+textRadio.onchange=updateChoice;imageRadio.onchange=updateChoice;updateChoice();$('editor').classList.add('on');
+const finish=v=>{$('editor').classList.remove('on');$('save').onclick=null;$('cancel').onclick=null;rowChoice.remove();hint.remove();resolve(v)};
+$('cancel').onclick=()=>finish(null);
+$('save').onclick=()=>{const selectedFile=file.files?.[0]||null;
+if(!isPost&&choice==='image'&&!selectedFile&&!hasImage){note('اختاري صورة التوصيف أولًا');return}
+if(!isPost&&choice==='image'&&selectedFile&&!selectedFile.type.startsWith('image/')){note('صيغة المرفق يجب أن تكون صورة');return}
+finish({title:$('itemTitle').value.trim(),description:$('itemDesc').value.trim(),file:selectedFile,descriptionType:choice})}
+})}
+function getDescription(c){return posts.find(x=>x.column_id===c.id&&x.kind==='description')||null}
+async function saveDescriptionImage(c,file,existing){
+let p=existing;
+if(!p)p=await insert('hazm_board_posts',{column_id:c.id,kind:'description',title:'صورة التوصيف',body:'',position:-1,created_by:user.id,published:false});
+if(file)await upload(file,p.id);
+await update('hazm_board_posts',p.id,{published:true});
+}
+async function newColumn(){
+const f=await form('إضافة عمود جديد');if(!f||!f.title){if(f)note('العنوان مطلوب');return}
+let c;try{
+c=await insert('hazm_board_columns',{section,title:f.title,description:f.description,position:columns.length,created_by:user.id,published:f.descriptionType==='text'});
+if(f.descriptionType==='image'){await saveDescriptionImage(c,f.file,null);await update('hazm_board_columns',c.id,{published:true})}
+await load()
+}catch(e){note('لم يكتمل الحفظ: '+e.message+'. لم تُحذف بيانات موجودة.');await load()}
+}
+async function editColumn(c){
+const existing=getDescription(c),hasImage=!!(existing&&attachments.some(a=>a.post_id===existing.id&&isImage(a)));
+const f=await form('تعديل العمود',c.title,c.description,false,!!existing?.published,hasImage);
+if(!f||!f.title){if(f)note('العنوان مطلوب');return}
+try{
+if(f.descriptionType==='image'){
+if(f.file||!existing?.published)await saveDescriptionImage(c,f.file,existing);
+}else if(existing&&existing.published){await update('hazm_board_posts',existing.id,{published:false})}
+await update('hazm_board_columns',c.id,{title:f.title,description:f.description,updated_at:new Date().toISOString()});
+await load()
+}catch(e){note('تعذر حفظ التوصيف: '+e.message);await load()}
+}
 async function removeColumn(c){if(!confirm('سيحذف العمود ومنشوراته. يجب حفظ نسخة احتياطية أولًا. هل أنت متأكدة؟'))return;const child=posts.filter(p=>p.column_id===c.id);if(child.some(p=>attachments.some(a=>a.post_id===p.id))){note('لحماية الأدلة، احذفي مرفقات المنشورات أولًا، ثم احذفي العمود.');return}try{await deleteRow('hazm_board_columns',c.id);await load()}catch(e){note(e.message)}}
 async function upload(file,postid){if(!file)return;if(file.size>50*1024*1024)throw Error('الملف أكبر من 50 ميجابايت');const safe=(file.name||'file').replace(/[^a-zA-Z0-9._-]/g,'_').slice(-80);const path=user.id+'/'+postid+'/'+(crypto.randomUUID?crypto.randomUUID():Date.now())+'-'+safe;const res=await fetch(URL+'/storage/v1/object/hazm-board-files/'+path,{method:'POST',headers:requestHeaders({'Content-Type':file.type||'application/octet-stream','x-upsert':'false'}),body:file});if(!res.ok){const j=await res.text();throw Error('فشل رفع الملف: '+j.slice(0,160))}await insert('hazm_board_attachments',{post_id:postid,storage_path:path,filename:file.name||safe,mime_type:file.type||'application/octet-stream',file_size:file.size,created_by:user.id})}
 async function newPost(c){const f=await form('إضافة دليل جديد','','',true);if(!f)return;if(!f.title&&!f.file){note('أدخلي عنوانًا أو مرفقًا');return}let p;try{p=await insert('hazm_board_posts',{column_id:c.id,kind:'evidence',title:f.title||f.file.name,body:f.description,position:posts.filter(x=>x.column_id===c.id).length,created_by:user.id,published:false});if(f.file)await upload(f.file,p.id);await update('hazm_board_posts',p.id,{published:true});await load()}catch(e){note('لم تكتمل الإضافة: '+e.message+'. ربما بقي المنشور كمسودة؛ تحققي قبل الإعادة.');await load()}}
