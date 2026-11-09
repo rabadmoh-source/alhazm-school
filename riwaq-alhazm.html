@@ -5,7 +5,9 @@ const dims={"الجودة الفكرية":["1.1 المعرفة المتعمقة"
 </script><script>
 (function(){
  const back=document.querySelector('a.portal-back');
- if(back&&new URLSearchParams(location.search).get('visitor')==='1'){
+ const visitorParam=new URLSearchParams(location.search).get('visitor')==='1';
+ const fromVisitor=(()=>{try{const previous=new URL(document.referrer);return previous.origin===location.origin && /\/visitor(?:\.html)?\/?$/.test(previous.pathname)}catch{return false}})();
+ if(back&&(visitorParam||fromVisitor)){
    back.setAttribute('href','./visitor.html');
    back.setAttribute('aria-label','الرجوع إلى الصفحة الرئيسية للزوار');
    back.textContent='↩ الرجوع إلى رئيسية الزوار';
