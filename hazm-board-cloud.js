@@ -4,9 +4,13 @@ const URL='https://fmmilquujleokfxcbnas.supabase.co';
 const KEY='sb_publishable_O_JqIM-VqzdGgU8VTvhRHQ_eQ9eTH5R';
 const DB='alhazm_activities_2026_v1';
 const isDevelopmentBoard=/professional-development-board\.html$/i.test(location.pathname);
-const section=isDevelopmentBoard?'professional_development':(new URLSearchParams(location.search).get('type')==='activities'?'activities':'initiatives');
+const isPartnershipBoard=/community-partnerships-board\.html$/i.test(location.pathname);
+const isCommunityInitiativesBoard=/community-initiatives-board\.html$/i.test(location.pathname);
+const isStandaloneBoard=isDevelopmentBoard||isPartnershipBoard||isCommunityInitiativesBoard;
+const section=isPartnershipBoard?'community_partnerships':isCommunityInitiativesBoard?'community_initiatives':isDevelopmentBoard?'professional_development':(new URLSearchParams(location.search).get('type')==='activities'?'activities':'initiatives');
+const boardName=isPartnershipBoard?'الشراكات المجتمعية':isCommunityInitiativesBoard?'المبادرات المجتمعية':isDevelopmentBoard?'توثيق الإنماء المهني':null;
 const visitorMode=new URLSearchParams(location.search).get('visitor')==='1';
-if(isDevelopmentBoard){
+if(isStandaloneBoard){
  const tabs=document.querySelector('.tabs');if(tabs){const back=document.getElementById('backToPortal');if(back)back.href= new URLSearchParams(location.search).get('visitor')==='1'?'./visitor.html':'./index.html';}
 }
 if(visitorMode){
@@ -15,7 +19,7 @@ if(visitorMode){
  if(i)i.href='?type=initiatives&visitor=1';
  if(back)back.href='./visitor.html';
  const heading=document.querySelector('header h1');
- if(heading)heading.textContent=isDevelopmentBoard?'💜 توثيق الإنماء المهني — عرض الزوار':'💜 لوحة الحزم | الأنشطة والمبادرات — عرض الزوار';
+ if(heading)heading.textContent=boardName?'💜 '+boardName+' — عرض الزوار':'💜 لوحة الحزم | الأنشطة والمبادرات — عرض الزوار';
 }
 const $=id=>document.getElementById(id);
 let token=sessionStorage.getItem('hazm_board_access')||'',user=null,admin=false,columns=[],posts=[],attachments=[],locals=[],mode='',current=null,selectedPost=null;
@@ -52,8 +56,8 @@ const ids=columns.map(x=>x.id);
 posts=ids.length?await query('hazm_board_posts','select=*&column_id=in.('+ids.join(',')+')&order=position.asc,created_at.asc'):[];
 if(visitorMode)posts=posts.filter(x=>x.published);
 const postids=posts.map(x=>x.id);attachments=postids.length?await query('hazm_board_attachments','select=*&post_id=in.('+postids.join(',')+')'):[];
-locals=admin&&!isDevelopmentBoard?await localRead():[];draw();
-}catch(e){message('تعذر الاتصال بالسحابة: '+e.message+'. البيانات المحلية لم تُحذف.');locals=admin&&!isDevelopmentBoard?await localRead():[];columns=[];posts=[];attachments=[];draw()}}
+locals=admin&&!isStandaloneBoard?await localRead():[];draw();
+}catch(e){message('تعذر الاتصال بالسحابة: '+e.message+'. البيانات المحلية لم تُحذف.');locals=admin&&!isStandaloneBoard?await localRead():[];columns=[];posts=[];attachments=[];draw()}}
 function makeButton(label,action,css=''){const b=el('button',css,label);b.onclick=action;return b}
 async function fileLink(a){try{const r=await call('/storage/v1/object/sign/'+a.storage_bucket+'/'+a.storage_path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({expiresIn:3600})});if(r.signedURL){const signed=r.signedURL.startsWith('http')?r.signedURL:URL+'/storage/v1'+(r.signedURL.startsWith('/')?'':'/')+r.signedURL;return signed}throw Error('تعذر إنشاء رابط الملف')}catch(e){note('تعذر فتح المرفق: '+e.message);return null}}
 function renderAttachment(a,host){if(isImage(a)){const img=el('img');img.alt=a.filename||'شاهد';img.loading='lazy';img.style.cursor='zoom-in';img.onclick=async()=>{const signed=await fileLink(a);if(!signed)return;$('zoomImage').src=signed;$('viewer').classList.add('on')};host.append(img);fileLink(a).then(link=>{if(link)img.src=link}).catch(()=>{})}else host.append(makeButton('عرض المرفق: '+a.filename,async()=>{const signed=await fileLink(a);if(signed)window.open(signed,'_blank','noopener')}))}
@@ -74,7 +78,7 @@ if(admin)lane.append(makeButton('＋ إضافة دليل أسفل العمود',
 $('board').append(lane)}
 function draw(){const board=$('board');board.replaceChildren();const remoteIds=new Set(columns.map(x=>x.source_local_id));columns.forEach(x=>renderLane(x));locals.filter(x=>!remoteIds.has(String(x.id))).forEach(x=>renderLane(x,true));if(admin)board.append(makeButton('＋ إضافة عمود جديد',()=>newColumn(),'new'));
 importInfo.textContent=admin?'إدارة موثقة • التخزين السحابي مفعّل • سجلات المتصفح القديمة متاحة للنقل اليدوي':'عرض المحتوى المنشور • للدخول الإداري استخدمي حساب الحزم المعتمد';
-message((isDevelopmentBoard?'توثيق الإنماء المهني':section==='activities'?'الأنشطة':'المبادرات')+' — '+columns.length+' أعمدة سحابية، '+locals.filter(x=>!remoteIds.has(String(x.id))).length+' أعمدة محلية لم تُنقل. لكل عمود توصيف ثابت وأدلة مرتبة أسفله.')}
+message((boardName||(section==='activities'?'الأنشطة':'المبادرات'))+' — '+columns.length+' أعمدة سحابية، '+locals.filter(x=>!remoteIds.has(String(x.id))).length+' أعمدة محلية لم تُنقل. لكل عمود توصيف ثابت وأدلة مرتبة أسفله.')}
 async function setPublished(table,r,published){try{await update(table,r.id,{published});await load()}catch(e){note(e.message)}}
 function form(title,name='',desc='',isPost=false,imageSelected=false,hasImage=false){return new Promise(resolve=>{
 mode=isPost?'post':'column';$('editorTitle').textContent=title;$('itemTitle').value=name;$('itemDesc').value=desc;$('itemFile').value='';
@@ -144,7 +148,7 @@ note('انتهى نقل السجل إلى السحابة كمسودة. راجع�
 
 const backupInput=el('input');backupInput.type='file';backupInput.accept='.json,application/json';backupInput.style.display='none';document.body.append(backupInput);
 const importBtn=makeButton('استيراد سجلات من نسخة احتياطية',()=>backupInput.click());
-if(!isDevelopmentBoard)toolbar.append(importBtn);
+if(!isStandaloneBoard)toolbar.append(importBtn);
 backupInput.onchange=async()=>{if(!admin){note('تسجيل الدخول الإداري مطلوب');return}const file=backupInput.files?.[0];if(!file)return;try{
 const parsed=JSON.parse(await file.text());const entries=parsed?.indexedDB?.[DB];if(!Array.isArray(entries))throw Error('لا تحتوي هذه النسخة على سجلات الأنشطة والمبادرات');
 const relevant=entries.filter(x=>x.type===section);if(!confirm('وجدت '+relevant.length+' سجلات من قسم '+(section==='activities'?'الأنشطة':'المبادرات')+'. سيتم نقلها كمسودات، مع إبقاء النسخة الاحتياطية دون تعديل. المتابعة؟'))return;
