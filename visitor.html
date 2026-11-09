@@ -96,6 +96,7 @@ const serviceBinary={clock:document.getElementById('embedded-clock').textContent
 let activeService=null;
 function decodeEmbedded(b64){const raw=atob(b64);return new TextDecoder('utf-8').decode(Uint8Array.from(raw,c=>c.charCodeAt(0)))}
 function openService(s){
+ if(s.id==='activities'){window.location.href='./activities-padlet-board.html?type=initiatives&visitor=1';return;}
  if(s.id==='riwaq'){window.location.href='./riwaq-alhazm.html?visitor=1';return;}
  if(!serviceBinary[s.id]){alert('هذه الخدمة غير مفعلة بعد');return}
  activeService=s.id;
