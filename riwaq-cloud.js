@@ -8,8 +8,67 @@ const published=document.createElement('div');published.className='card';publish
 const tool=document.createElement('div');tool.className='riwaq-private';tool.hidden=true;
 tool.innerHTML='<h3>السجلات الإدارية الخاصة</h3><label>عنوان السجل</label><input id="riwaq-title" placeholder="عنوان الجولة"><div class="riwaq-admin-toolbar"><button id="riwaq-save">حفظ الجولة في السحابة</button><button id="riwaq-new">سجل جديد</button><button id="riwaq-refresh">تحديث السجلات</button></div><label>فتح سجل سابق</label><select id="riwaq-saved"><option value="">اختاري سجلًا محفوظًا</option></select><h3>نشر ملخص معتمد للزوار</h3><label>عنوان الملخص العلني</label><input id="riwaq-pub-title" placeholder="عنوان النتيجة المنشورة"><label>ملخص للنشر (دون أسماء أو صور خاصة)</label><textarea id="riwaq-pub-summary"></textarea><p class="riwaq-warning">راجعي النص قبل النشر: سيصبح متاحًا لجميع الزوار.</p><button id="riwaq-publish">اعتماد ونشر الملخص</button>';
 document.querySelector('#home').append(tool);
-let client=null,admin=false,currentId=null;const visitorMode=new URLSearchParams(location.search).get('visitor')==='1';window.riwaqAdminEnabled=false;const login=document.createElement('div');login.id='riwaq-login';login.innerHTML='<button type="button" id="riwaq-login-toggle">دخول إدارة الرواق</button><div id="riwaq-login-fields"><label for="riwaq-email">البريد الإلكتروني للإدارة</label><input type="email" id="riwaq-email" autocomplete="username" placeholder="بريد الإدارة المسجل"><label for="riwaq-password">كلمة المرور</label><input type="password" id="riwaq-password" autocomplete="current-password"><button type="button" id="riwaq-signin">دخول</button></div></div>';portal.append(login);const logout=document.createElement('button');logout.id='riwaq-signout';logout.textContent='خروج الإدارة';logout.hidden=true;portal.append(logout);const $=id=>document.getElementById(id),message=s=>$('riwaq-message').textContent=s;document.querySelectorAll('nav button[data-page], [data-go]').forEach(b=>b.addEventListener('click',()=>{if(admin){const target=document.querySelector('#'+(b.dataset.page||b.dataset.go));if(target&&target.id!=='home')target.prepend(tool)}}));$('riwaq-login-toggle').onclick=()=>{$('riwaq-login-fields').hidden=!$('riwaq-login-fields').hidden};$('riwaq-signin').onclick=async()=>{if(!client){message('لم يكتمل الاتصال بعد');return}const email=$('riwaq-email').value.trim(),password=$('riwaq-password').value;if(!email||!password){message('أدخلي البريد الإلكتروني وكلمة المرور');return}const btn=$('riwaq-signin');btn.disabled=true;message('جارٍ التحقق من حساب الإدارة...');try{const {error}=await client.auth.signInWithPassword({email,password});if(error)throw error;$('riwaq-password').value='';await checkSession()}catch(e){message('تعذّر تسجيل الدخول: '+e.message)}finally{btn.disabled=false}};logout.onclick=async()=>{await client.auth.signOut();admin=false;currentId=null;lockForms();message('تم تسجيل الخروج')};
-function lockForms(){window.riwaqAdminEnabled=!visitorMode;for(const id of ['learn','teach','impact']){document.querySelectorAll('#'+id+' input,#'+id+' textarea,#'+id+' select').forEach(x=>{x.disabled=visitorMode})}if(!visitorMode){$('element').disabled=!$('dimension').value;$('observation-element').disabled=!$('observation-dimension').value}tool.hidden=!admin;portal.hidden=true;login.hidden=true;logout.hidden=true;document.querySelectorAll('nav button[data-page]').forEach(b=>{if(b.dataset.page!=='home')b.hidden=visitorMode});document.querySelectorAll('[data-go]').forEach(b=>b.hidden=!admin);if(visitorMode){document.querySelectorAll('main section').forEach(x=>x.hidden=x.id!=='home');document.querySelectorAll('nav button[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page==='home'))}else if(admin){const page=currentPage();const target=document.querySelector('#'+page);if(target)target.prepend(tool)}$('riwaq-status').textContent=admin?'وضع الإدارة: يمكنك إضافة الجولات وحفظها، ولا يظهر للزوار إلا الملخص المعتمد.':'وضع الزائر: عرض النتائج المنشورة فقط.';}
+let client=null,admin=false,currentId=null;
+const visitorMode=new URLSearchParams(location.search).get('visitor')==='1';
+window.riwaqAdminEnabled=false;
+const login=document.createElement('div');
+login.id='riwaq-login';
+login.innerHTML='<button type="button" id="riwaq-login-toggle">تفعيل إدارة الرواق</button><div id="riwaq-login-fields" hidden><p class="tiny">تفعيل لمرة واحدة على هذا المتصفح عبر بريد الإدارة؛ لا توجد كلمة مرور خاصة بالرواق.</p><label for="riwaq-email">بريد حساب الإدارة</label><input type="email" id="riwaq-email" autocomplete="email" placeholder="البريد الإلكتروني"><button type="button" id="riwaq-send-link">إرسال رابط التفعيل</button><div id="riwaq-otp-fields" hidden><label for="riwaq-otp">رمز البريد (إن وصلك رمز بدل الرابط)</label><input id="riwaq-otp" type="text" inputmode="numeric" maxlength="8" placeholder="رمز التحقق"><button type="button" id="riwaq-verify-otp">تأكيد الرمز</button></div></div>';
+portal.append(login);
+const logout=document.createElement('button');
+logout.id='riwaq-signout';logout.textContent='خروج الإدارة';logout.hidden=true;portal.append(logout);
+const $=id=>document.getElementById(id),message=s=>$('riwaq-message').textContent=s;
+$('riwaq-login-toggle').onclick=()=>{$('riwaq-login-fields').hidden=!$('riwaq-login-fields').hidden};
+$('riwaq-send-link').onclick=async()=>{
+ if(!client){message('الاتصال السحابي غير جاهز بعد.');return}
+ const email=$('riwaq-email').value.trim();
+ if(!email){message('أدخلي بريد الإدارة أولًا.');return}
+ const button=$('riwaq-send-link');button.disabled=true;
+ try{
+  const {error}=await client.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
+  if(error)throw error;
+  $('riwaq-otp-fields').hidden=false;
+  message('أُرسل رابط التفعيل إلى البريد إن كان الحساب مسجلًا. افتحيه من هذا المتصفح؛ وبعدها سيتم نشر الجولات المحفوظة تلقائيًا.');
+ }catch(e){message('تعذّر إرسال رابط التفعيل: '+e.message)}
+ finally{button.disabled=false}
+};
+$('riwaq-verify-otp').onclick=async()=>{
+ const email=$('riwaq-email').value.trim(),token=$('riwaq-otp').value.trim();
+ if(!email||!token){message('أدخلي البريد والرمز.');return}
+ const button=$('riwaq-verify-otp');button.disabled=true;
+ try{
+  const {error}=await client.auth.verifyOtp({email,token,type:'email'});
+  if(error)throw error;
+  await checkSession();
+ }catch(e){message('تعذّر تأكيد الرمز: '+e.message)}
+ finally{button.disabled=false}
+};
+logout.onclick=async()=>{await client.auth.signOut();admin=false;currentId=null;lockForms();message('تم تسجيل الخروج')};
+function lockForms(){
+ const canEdit=admin&&!visitorMode;
+ window.riwaqAdminEnabled=canEdit;
+ for(const id of ['learn','teach','impact']){
+  document.querySelectorAll('#'+id+' input,#'+id+' textarea,#'+id+' select').forEach(x=>{x.disabled=!canEdit});
+ }
+ if(canEdit){
+  $('element').disabled=!$('dimension').value;
+  $('observation-element').disabled=!$('observation-dimension').value;
+ }
+ tool.hidden=true;
+ portal.hidden=canEdit||visitorMode;
+ login.hidden=canEdit||visitorMode;
+ logout.hidden=true;
+ document.querySelectorAll('nav button[data-page]').forEach(b=>{if(b.dataset.page!=='home')b.hidden=!canEdit});
+ document.querySelectorAll('[data-go]').forEach(b=>b.hidden=!canEdit);
+ document.querySelectorAll('.riwaq-local-header,.riwaq-local-footer').forEach(p=>p.hidden=!canEdit);
+ const backup=document.getElementById('riwaq-backup');if(backup)backup.hidden=!canEdit;
+ if(!canEdit){
+  document.querySelectorAll('main section').forEach(x=>x.hidden=x.id!=='home');
+  document.querySelectorAll('nav button[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page==='home'));
+ }
+ $('riwaq-status').textContent=canEdit?'إدارة الرواق مفعّلة.':'عرض الجولات المنشورة متاح للجميع.';
+ if(typeof renderHomeRounds==='function')renderHomeRounds();
+}
 async function loadPublic(){try{
  const {data,error}=await client.from('riwaq_publications').select('id,title,summary,round_type,published_at,metrics').order('published_at',{ascending:false}).limit(100);
  if(error)throw error;
@@ -33,8 +92,31 @@ $('riwaq-saved').onchange=e=>{const op=e.target.selectedOptions[0];if(!e.target.
 $('riwaq-save').onclick=async()=>{if(!admin){message('يجب تسجيل الدخول كإدارة قبل حفظ الجولة.');return}const title=$('riwaq-title').value.trim();if(!title){message('أدخلي عنوان السجل أولًا.');return}const payload={learn:snapshot('learn'),teach:snapshot('teach'),impact:snapshot('impact')},record={title,round_type:currentPage()==='teach'?'teaching':'learning',payload};const btn=$('riwaq-save');btn.disabled=true;try{let result;if(currentId)result=await client.from('riwaq_entries').update({...record,updated_at:new Date().toISOString()}).eq('id',currentId).select('id').single();else result=await client.from('riwaq_entries').insert(record).select('id').single();if(result.error)throw result.error;currentId=result.data.id;await loadEntries();$('riwaq-saved').value=currentId;message('تم حفظ السجل في قاعدة البيانات السحابية بنجاح.')}catch(e){message('فشل الحفظ: '+e.message)}finally{btn.disabled=false}};
 $('riwaq-new').onclick=reset;$('riwaq-refresh').onclick=async()=>{try{await loadEntries();message('تم تحديث السجلات.')}catch(e){message(e.message)}};
 $('riwaq-publish').onclick=async()=>{if(!admin)return;const title=$('riwaq-pub-title').value.trim(),summary=$('riwaq-pub-summary').value.trim();if(!title||!summary){message('أدخلي عنوان الملخص ونصه قبل نشره.');return}if(!confirm('سيظهر هذا الملخص لجميع زوار البوابة. هل راجعتِ خلوّه من البيانات الداخلية؟'))return;const btn=$('riwaq-publish');btn.disabled=true;try{const type=currentPage()==='teach'?'teaching':currentPage()==='impact'?'impact':'learning';const {error}=await client.from('riwaq_publications').insert({title,summary,round_type:type});if(error)throw error;$('riwaq-pub-title').value='';$('riwaq-pub-summary').value='';await loadPublic();message('تم نشر الملخص المعتمد للزوار.')}catch(e){message('لم يتم النشر: '+e.message)}finally{btn.disabled=false}};
-async function checkSession(){if(new URLSearchParams(location.search).get('visitor')==='1'){admin=false;lockForms();return}const {data}=await client.auth.getUser();const user=data.user;if(!user){admin=false;lockForms();message('لإضافة جولة، سجّلي الدخول بحساب إدارة الرواق أولًا.');return}try{const {data:access,error}=await client.from('riwaq_admins').select('user_id').eq('user_id',user.id).maybeSingle();if(error)throw error;admin=!!access;lockForms();if(admin){await loadEntries();message('صلاحية الإدارة مفعّلة. اختاري جولات التعلم أو جولات التدريس ثم ابدئي الإضافة والحفظ.')}else {admin=false;lockForms();message('هذا الحساب غير مضاف إلى قائمة إدارة الرواق.') }}catch(e){admin=false;lockForms();message('تعذّر التحقق من صلاحيات الإدارة: '+e.message)}} 
-async function boot(){try{const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');client=createClient(PROJECT_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'alhazm-evidence-session'}});await loadPublic();await syncExistingRounds();}catch(e){message('تعذّر الاتصال بالخادم الآن. تبقى الصفحة متاحة للعرض فقط.');lockForms()}}
+async function checkSession(){
+ if(visitorMode){admin=false;lockForms();return false}
+ try{
+  const {data,error}=await client.auth.getUser();
+  if(error)throw error;
+  if(!data?.user){admin=false;lockForms();return false}
+  const {data:access,error:authError}=await client.from('riwaq_admins').select('user_id').eq('user_id',data.user.id).maybeSingle();
+  if(authError)throw authError;
+  admin=!!access;
+  lockForms();
+  if(admin){message('تم تفعيل الإدارة. النشر السحابي تلقائي عند حفظ أي جولة.');await syncExistingRounds()}
+  else message('هذا البريد لا يمتلك صلاحية الإدارة في الرواق.');
+  return admin;
+ }catch(e){admin=false;lockForms();message('تعذّر التحقق من جلسة الإدارة: '+e.message);return false}
+}
+async function boot(){
+ try{
+  const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  client=createClient(PROJECT_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'alhazm-evidence-session'}});
+  await loadPublic();
+  await checkSession();
+  client.auth.onAuthStateChange(()=>{setTimeout(()=>{checkSession().catch(()=>{})},0)});
+ }catch(e){admin=false;lockForms();message('تعذّر الاتصال بالسحابة: '+e.message)}
+}
+
 // Independent on-device drafts: editing works without a second password; publication stays protected by RLS.
 const localPrefix='alhazm-riwaq-drafts-v2';
 function getDrafts(){try{return JSON.parse(localStorage.getItem(localPrefix)||'[]')}catch{return []}}
@@ -64,6 +146,7 @@ async function importRiwaqBackup(file){
 function setupBackupControls(){
  if(visitorMode)return;
  const panel=document.createElement('div');panel.className='card';panel.id='riwaq-backup';
+ panel.hidden=!admin;
  panel.innerHTML='<h3>نسخة احتياطية لرِواق الحزم</h3><p class="tiny">حمّلي نسخة JSON من الجولات المحفوظة على هذا الجهاز، ويمكنك استيرادها لاحقًا من الجهاز نفسه أو جهاز آخر. لا تتضمن الصور، فهي محفوظة بصورة منفصلة في المتصفح.</p><div class="riwaq-admin-toolbar"><button type="button" id="riwaq-export">تنزيل نسخة احتياطية</button><button type="button" id="riwaq-import">استيراد نسخة احتياطية</button><input type="file" id="riwaq-import-file" accept=".json,application/json" style="display:none"></div><p id="riwaq-backup-status" class="tiny" role="status"></p>';
  const home=document.getElementById('home');home.insertBefore(panel,home.firstElementChild);
  panel.querySelector('#riwaq-export').onclick=exportRiwaqBackup;
@@ -74,7 +157,7 @@ let lastPublications=[];
 function renderHomeRounds(publications=null){
  if(Array.isArray(publications))lastPublications=publications;
  publications=lastPublications;
- const local=visitorMode?[]:getDrafts();
+ const local=admin&&!visitorMode?getDrafts():[];
  const types=[['learn','learning',0],['teach','teaching',1],['impact','impact',2]];
  const stats=[...document.querySelectorAll('#home .stat')];
  const tiles=stats.map(x=>x.closest('.card'));
@@ -148,11 +231,11 @@ async function storeRoundPhotos(id,files){const db=await photoDatabase();return 
 async function readRoundPhotos(id){const db=await photoDatabase();return new Promise((resolve,reject)=>{const tx=db.transaction('roundPhotos','readonly');const req=tx.objectStore('roundPhotos').get(id);req.onsuccess=()=>{db.close();resolve(req.result||[])};req.onerror=()=>{db.close();reject(req.error)}})}
 for(const pg of ['learn','teach','impact']){
  const section=document.getElementById(pg);
- const header=document.createElement('div');header.className='card riwaq-local-header';header.hidden=visitorMode;
+ const header=document.createElement('div');header.className='card riwaq-local-header';header.hidden=!admin||visitorMode;
  header.innerHTML='<div class="riwaq-local-heading"><h3>بيانات الجولة</h3><button type="button" class="riwaq-local-previous">الجولات السابقة</button></div><div class="fields"><div><label>عنوان الجولة</label><input class="riwaq-local-title" placeholder="اكتبي عنوان الجولة"></div><div><label>تاريخ الجولة</label><input class="riwaq-local-date" type="date"></div></div><div class="riwaq-local-history" hidden><label>اختاري الجولة لفتحها وتعديلها</label><select class="riwaq-local-list"></select></div>';
  section.insertBefore(header,section.children[1]||null);
- const footer=document.createElement('div');footer.className='card riwaq-local-footer';footer.hidden=visitorMode;
- footer.innerHTML='<div class="riwaq-admin-toolbar"><button type="button" class="riwaq-local-save">حفظ الجولة</button><button type="button" class="riwaq-local-new">جولة جديدة</button></div><p class="riwaq-local-msg tiny" role="status"></p><p class="tiny">يُحفظ السجل على هذا الجهاز. لا تظهر بياناته للزوار إلا بعد نجاح المزامنة السحابية.</p>';
+ const footer=document.createElement('div');footer.className='card riwaq-local-footer';footer.hidden=!admin||visitorMode;
+ footer.innerHTML='<div class="riwaq-admin-toolbar"><button type="button" class="riwaq-local-save">حفظ الجولة</button><button type="button" class="riwaq-local-new">جولة جديدة</button></div><p class="riwaq-local-msg tiny" role="status"></p><p class="tiny">عند الحفظ تُنشر بيانات الجولة الكاملة للزوار تلقائيًا. تُحفظ نسخة احتياطية على هذا الجهاز.</p>';
  section.append(footer);
  let photoInput=null,photoPreview=null,loadedPhotos=[],photoUrls=[];
  if(pg==='learn'||pg==='teach'){
