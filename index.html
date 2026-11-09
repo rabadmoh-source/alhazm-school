@@ -79,6 +79,7 @@ const serviceBinary={clock:document.getElementById('embedded-clock').textContent
 let activeService=null;
 function decodeEmbedded(b64){const raw=atob(b64);return new TextDecoder('utf-8').decode(Uint8Array.from(raw,c=>c.charCodeAt(0)))}
 function openService(s){
+ if(s.id==='activities'){window.location.href='./activities-padlet-board.html?type=initiatives';return;}
  if(s.id==='visitor'){window.location.href='./visitor.html';return;}
  if(s.id==='riwaq'){window.location.href='./riwaq-alhazm.html';return;}
  if(s.id==='certificates'){window.location.href='./certificates-studio.html';return;}
