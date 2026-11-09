@@ -21,10 +21,16 @@ async function verify(){if(!token){admin=false;user=null;return}try{const u=awai
 const toolbar=el('div','row');toolbar.style='padding:8px 20px;justify-content:flex-start';
 const authButton=el('button','','الدخول للإدارة');toolbar.append(authButton);
 const importInfo=el('span','','');importInfo.style='font-size:12px;color:#665b6f;align-self:center';toolbar.append(importInfo);$('message').after(toolbar);
+async function getCredentials(){return new Promise(resolve=>{
+const wrap=el('div','modal on'),dialog=el('form','dialog');dialog.autocomplete='on';
+const title=el('h2','','دخول إدارة الحزم'),emailLabel=el('label','','البريد الإلكتروني'),email=el('input'),passLabel=el('label','','كلمة المرور'),pass=el('input'),buttons=el('div','row'),cancel=el('button','','إلغاء'),submit=el('button','primary','دخول');
+email.type='email';email.required=true;email.autocomplete='username';pass.type='password';pass.required=true;pass.autocomplete='current-password';submit.type='submit';cancel.type='button';
+emailLabel.append(email);passLabel.append(pass);buttons.append(cancel,submit);dialog.append(title,emailLabel,passLabel,buttons);wrap.append(dialog);document.body.append(wrap);
+const done=value=>{wrap.remove();resolve(value)};cancel.onclick=()=>done(null);dialog.onsubmit=e=>{e.preventDefault();done({email:email.value.trim(),password:pass.value})};email.focus();
+})}
 authButton.onclick=async()=>{if(admin){token='';admin=false;user=null;sessionStorage.removeItem('hazm_board_access');await load();return}
-const email=prompt('البريد الإلكتروني لحساب إدارة الحزم في Supabase');if(!email)return;
-const password=prompt('كلمة مرور حساب الإدارة');if(!password)return;
-try{const out=await call('/auth/v1/token?grant_type=password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.trim(),password})});token=out.access_token;await verify();if(!admin){note('الحساب غير مصرح له بإدارة لوحة الحزم.')}else sessionStorage.setItem('hazm_board_access',token);await load()}catch(e){token='';note('تعذر تسجيل الدخول: '+e.message)}};
+const credentials=await getCredentials();if(!credentials)return;
+try{const out=await call('/auth/v1/token?grant_type=password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(credentials)});token=out.access_token;await verify();if(!admin){note('الحساب غير مصرح له بإدارة لوحة الحزم.')}else sessionStorage.setItem('hazm_board_access',token);await load()}catch(e){token='';note('تعذر تسجيل الدخول: '+e.message)}};
 function localRead(){return new Promise(resolve=>{try{const req=indexedDB.open(DB);req.onupgradeneeded=()=>req.transaction.abort();req.onerror=()=>resolve([]);req.onsuccess=()=>{const db=req.result;const names=Array.from(db.objectStoreNames);if(!names.length)return resolve([]);const t=db.transaction(names[0],'readonly');const q=t.objectStore(names[0]).getAll();q.onsuccess=()=>resolve((q.result||[]).filter(x=>x.type===section));q.onerror=()=>resolve([])}}catch{resolve([])}})}
 async function load(){message('جارٍ تحميل البيانات من التخزين المركزي...');authButton.textContent=admin?'تسجيل خروج الإدارة':'دخول الإدارة';try{
 columns=await query('hazm_board_columns','select=*&section=eq.'+section+'&order=position.asc,created_at.asc');
