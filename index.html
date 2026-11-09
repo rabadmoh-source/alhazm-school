@@ -165,7 +165,11 @@ function openService(s){
  const view=document.getElementById('embeddedService');view.classList.remove('hide');document.body.classList.add('service-expanded');
  document.getElementById('serviceHeading').textContent=s.name;
  document.getElementById('hazmCloudLinks').classList.toggle('hide',s.id!=='monitor');
- document.getElementById('serviceFrame').srcdoc=decodeEmbedded(serviceBinary[s.id]);
+ let serviceHtml=decodeEmbedded(serviceBinary[s.id]);
+ if(s.id==='family'){
+  serviceHtml=serviceHtml.replace('</head>','<style id="hazmFamilyRemoveOldSidebar">html body aside{display:none!important}html body main{margin-right:0!important;margin-left:0!important;width:100%!important;max-width:none!important}@media(max-width:850px){html body main{margin:0!important}}</style></head>');
+ }
+ document.getElementById('serviceFrame').srcdoc=serviceHtml;
  window.scrollTo(0,0);
 }
 function returnPortal(){const pdWrap=document.getElementById('hazmPdSideWrap');if(pdWrap){const frame=document.getElementById('serviceFrame');pdWrap.parentNode.insertBefore(frame,pdWrap);pdWrap.remove();}document.body.classList.remove('service-expanded');activeService=null;document.getElementById('serviceFrame').removeAttribute('srcdoc');document.getElementById('serviceFrame').removeAttribute('src');document.getElementById('embeddedService').classList.add('hide');document.querySelector('main .hero').classList.remove('hide');document.querySelector('.grid4').classList.remove('hide');for(const sec of document.querySelectorAll('main.wrap > section'))if(sec.id!=='embeddedService')sec.classList.remove('hide');window.scrollTo(0,0)}
