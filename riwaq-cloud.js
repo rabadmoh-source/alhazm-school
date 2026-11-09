@@ -3,47 +3,15 @@
 const PROJECT_URL='https://fmmilquujleokfxcbnas.supabase.co', KEY="sb_publishable_O_JqIM-VqzdGgU8VTvhRHQ_eQ9eTH5R";
 const style=document.createElement('style');style.textContent='.riwaq-access{background:#fff;border:1px solid #e3d8ea;border-radius:14px;padding:15px;margin:15px 0}.riwaq-access input{max-width:330px;margin:4px}.riwaq-access button{margin:4px}.riwaq-access .riwaq-status{font-size:13px;color:#604977}.riwaq-approved{border-right:4px solid #169b9b;margin:12px 0;padding:12px;background:#fff;border-radius:10px}.riwaq-private{border-right:4px solid #664082;background:#f4eef8;padding:12px;border-radius:10px;margin:12px 0}.riwaq-admin-toolbar{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}.riwaq-warning{font-weight:bold;color:#9b3b37}';style.textContent+=' .riwaq-local-header,.riwaq-local-footer{border:1px solid #e9e3ef;background:white}.riwaq-local-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}.riwaq-local-heading h3{margin:0}.riwaq-local-save{background:#644084;color:white}.riwaq-local-header .riwaq-local-history{margin-top:12px}';document.head.append(style);
 const nav=document.querySelector('main nav'),portal=document.createElement('div');portal.className='riwaq-access';
-portal.innerHTML='<strong>إدارة رِواق الحزم</strong><p class="riwaq-status" id="riwaq-status">عرض عام للزوار — لا تظهر الملاحظات الداخلية.</p><div id="riwaq-message" class="riwaq-status" role="status"></div>';nav.before(portal);portal.hidden=false;
+portal.innerHTML='<strong>إدارة رِواق الحزم</strong><p class="riwaq-status" id="riwaq-status">عرض عام للزوار — لا تظهر الملاحظات الداخلية.</p><div id="riwaq-message" class="riwaq-status" role="status"></div>';nav.before(portal);portal.hidden=true;
 const published=document.createElement('div');published.className='card';published.innerHTML='<h3>نتائج الجولات المعتمدة للنشر</h3><div id="riwaq-public-list">يتم تحميل النتائج المعتمدة...</div>';document.querySelector('#home').append(published);
 const tool=document.createElement('div');tool.className='riwaq-private';tool.hidden=true;
 tool.innerHTML='<h3>السجلات الإدارية الخاصة</h3><label>عنوان السجل</label><input id="riwaq-title" placeholder="عنوان الجولة"><div class="riwaq-admin-toolbar"><button id="riwaq-save">حفظ الجولة في السحابة</button><button id="riwaq-new">سجل جديد</button><button id="riwaq-refresh">تحديث السجلات</button></div><label>فتح سجل سابق</label><select id="riwaq-saved"><option value="">اختاري سجلًا محفوظًا</option></select><h3>نشر ملخص معتمد للزوار</h3><label>عنوان الملخص العلني</label><input id="riwaq-pub-title" placeholder="عنوان النتيجة المنشورة"><label>ملخص للنشر (دون أسماء أو صور خاصة)</label><textarea id="riwaq-pub-summary"></textarea><p class="riwaq-warning">راجعي النص قبل النشر: سيصبح متاحًا لجميع الزوار.</p><button id="riwaq-publish">اعتماد ونشر الملخص</button>';
 document.querySelector('#home').append(tool);
-let client=null,admin=false,currentId=null;
+let client=null,admin=false,currentId=null,firebaseAuth=null,firebaseUnsubscribe=null;
 const visitorMode=new URLSearchParams(location.search).get('visitor')==='1';
 window.riwaqAdminEnabled=false;
-const login=document.createElement('div');
-login.id='riwaq-login';
-login.innerHTML='<button type="button" id="riwaq-login-toggle">تفعيل إدارة الرواق</button><div id="riwaq-login-fields" hidden><p class="tiny">تفعيل لمرة واحدة على هذا المتصفح عبر بريد الإدارة؛ لا توجد كلمة مرور خاصة بالرواق.</p><label for="riwaq-email">بريد حساب الإدارة</label><input type="email" id="riwaq-email" autocomplete="email" placeholder="البريد الإلكتروني"><button type="button" id="riwaq-send-link">إرسال رابط التفعيل</button><div id="riwaq-otp-fields" hidden><label for="riwaq-otp">رمز البريد (إن وصلك رمز بدل الرابط)</label><input id="riwaq-otp" type="text" inputmode="numeric" maxlength="8" placeholder="رمز التحقق"><button type="button" id="riwaq-verify-otp">تأكيد الرمز</button></div></div>';
-portal.append(login);
-const logout=document.createElement('button');
-logout.id='riwaq-signout';logout.textContent='خروج الإدارة';logout.hidden=true;portal.append(logout);
 const $=id=>document.getElementById(id),message=s=>$('riwaq-message').textContent=s;
-$('riwaq-login-toggle').onclick=()=>{$('riwaq-login-fields').hidden=!$('riwaq-login-fields').hidden};
-$('riwaq-send-link').onclick=async()=>{
- if(!client){message('الاتصال السحابي غير جاهز بعد.');return}
- const email=$('riwaq-email').value.trim();
- if(!email){message('أدخلي بريد الإدارة أولًا.');return}
- const button=$('riwaq-send-link');button.disabled=true;
- try{
-  const {error}=await client.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
-  if(error)throw error;
-  $('riwaq-otp-fields').hidden=false;
-  message('أُرسل رابط التفعيل إلى البريد إن كان الحساب مسجلًا. افتحيه من هذا المتصفح؛ وبعدها سيتم نشر الجولات المحفوظة تلقائيًا.');
- }catch(e){message('تعذّر إرسال رابط التفعيل: '+e.message)}
- finally{button.disabled=false}
-};
-$('riwaq-verify-otp').onclick=async()=>{
- const email=$('riwaq-email').value.trim(),token=$('riwaq-otp').value.trim();
- if(!email||!token){message('أدخلي البريد والرمز.');return}
- const button=$('riwaq-verify-otp');button.disabled=true;
- try{
-  const {error}=await client.auth.verifyOtp({email,token,type:'email'});
-  if(error)throw error;
-  await checkSession();
- }catch(e){message('تعذّر تأكيد الرمز: '+e.message)}
- finally{button.disabled=false}
-};
-logout.onclick=async()=>{await client.auth.signOut();admin=false;currentId=null;lockForms();message('تم تسجيل الخروج')};
 function lockForms(){
  const canEdit=admin&&!visitorMode;
  window.riwaqAdminEnabled=canEdit;
@@ -55,9 +23,7 @@ function lockForms(){
   $('observation-element').disabled=!$('observation-dimension').value;
  }
  tool.hidden=true;
- portal.hidden=canEdit||visitorMode;
- login.hidden=canEdit||visitorMode;
- logout.hidden=true;
+ portal.hidden=true;
  document.querySelectorAll('nav button[data-page]').forEach(b=>{if(b.dataset.page!=='home')b.hidden=!canEdit});
  document.querySelectorAll('[data-go]').forEach(b=>b.hidden=!canEdit);
  document.querySelectorAll('.riwaq-local-header,.riwaq-local-footer').forEach(p=>p.hidden=!canEdit);
@@ -92,29 +58,32 @@ $('riwaq-saved').onchange=e=>{const op=e.target.selectedOptions[0];if(!e.target.
 $('riwaq-save').onclick=async()=>{if(!admin){message('يجب تسجيل الدخول كإدارة قبل حفظ الجولة.');return}const title=$('riwaq-title').value.trim();if(!title){message('أدخلي عنوان السجل أولًا.');return}const payload={learn:snapshot('learn'),teach:snapshot('teach'),impact:snapshot('impact')},record={title,round_type:currentPage()==='teach'?'teaching':'learning',payload};const btn=$('riwaq-save');btn.disabled=true;try{let result;if(currentId)result=await client.from('riwaq_entries').update({...record,updated_at:new Date().toISOString()}).eq('id',currentId).select('id').single();else result=await client.from('riwaq_entries').insert(record).select('id').single();if(result.error)throw result.error;currentId=result.data.id;await loadEntries();$('riwaq-saved').value=currentId;message('تم حفظ السجل في قاعدة البيانات السحابية بنجاح.')}catch(e){message('فشل الحفظ: '+e.message)}finally{btn.disabled=false}};
 $('riwaq-new').onclick=reset;$('riwaq-refresh').onclick=async()=>{try{await loadEntries();message('تم تحديث السجلات.')}catch(e){message(e.message)}};
 $('riwaq-publish').onclick=async()=>{if(!admin)return;const title=$('riwaq-pub-title').value.trim(),summary=$('riwaq-pub-summary').value.trim();if(!title||!summary){message('أدخلي عنوان الملخص ونصه قبل نشره.');return}if(!confirm('سيظهر هذا الملخص لجميع زوار البوابة. هل راجعتِ خلوّه من البيانات الداخلية؟'))return;const btn=$('riwaq-publish');btn.disabled=true;try{const type=currentPage()==='teach'?'teaching':currentPage()==='impact'?'impact':'learning';const {error}=await client.from('riwaq_publications').insert({title,summary,round_type:type});if(error)throw error;$('riwaq-pub-title').value='';$('riwaq-pub-summary').value='';await loadPublic();message('تم نشر الملخص المعتمد للزوار.')}catch(e){message('لم يتم النشر: '+e.message)}finally{btn.disabled=false}};
-async function checkSession(){
- if(visitorMode){admin=false;lockForms();return false}
- try{
-  const {data,error}=await client.auth.getUser();
-  if(error)throw error;
-  if(!data?.user){admin=false;lockForms();return false}
-  const {data:access,error:authError}=await client.from('riwaq_admins').select('user_id').eq('user_id',data.user.id).maybeSingle();
-  if(authError)throw authError;
-  admin=!!access;
-  lockForms();
-  if(admin){message('تم تفعيل الإدارة. النشر السحابي تلقائي عند حفظ أي جولة.');await syncExistingRounds()}
-  else message('هذا البريد لا يمتلك صلاحية الإدارة في الرواق.');
-  return admin;
- }catch(e){admin=false;lockForms();message('تعذّر التحقق من جلسة الإدارة: '+e.message);return false}
-}
 async function boot(){
  try{
   const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-  client=createClient(PROJECT_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'alhazm-evidence-session'}});
+  client=createClient(PROJECT_URL,KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
   await loadPublic();
-  await checkSession();
-  client.auth.onAuthStateChange(()=>{setTimeout(()=>{checkSession().catch(()=>{})},0)});
- }catch(e){admin=false;lockForms();message('تعذّر الاتصال بالسحابة: '+e.message)}
+  if(visitorMode){admin=false;lockForms();return}
+  const [{initializeApp,getApps,getApp},{getAuth,onAuthStateChanged},{getFirestore,doc,getDoc}]=await Promise.all([
+    import('https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js'),
+    import('https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js'),
+    import('https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js')
+  ]);
+  const config={apiKey:'AIzaSyCjmaFoQT1lx54ckRx-43ocY0Db5YIHfQ8',authDomain:'alhazm-school-portal.firebaseapp.com',projectId:'alhazm-school-portal',appId:'1:25747236318:web:60086e065e50d3eacda94f'};
+  const app=getApps().find(x=>x.options?.projectId===config.projectId)||initializeApp(config,'riwaq-firebase-shared');
+  firebaseAuth=getAuth(app);
+  const db=getFirestore(app);
+  onAuthStateChanged(firebaseAuth,async(user)=>{
+   if(!user){admin=false;lockForms();message('سجلي الدخول إلى إدارة البوابة الرئيسية لتفعيل مزامنة الرواق.');return}
+   try{
+    const check=await getDoc(doc(db,'admins',user.uid));
+    admin=check.exists()&&check.data().role==='admin';
+    lockForms();
+    if(admin){message('مزامنة الرواق مرتبطة بإدارة البوابة.');await syncExistingRounds()}
+    else message('ليس لهذا الحساب صلاحية إدارة الرواق.');
+   }catch(e){admin=false;lockForms();message('تعذّر التحقق من إدارة البوابة: '+e.message)}
+  });
+ }catch(e){admin=false;lockForms();message('تعذّر بدء مزامنة الرواق: '+e.message)}
 }
 
 // Independent on-device drafts: editing works without a second password; publication stays protected by RLS.
@@ -190,44 +159,29 @@ function safePublicSummary(record){
  return bits.filter(Boolean).join(' — ');
 }
 async function publishRound(record){
- if(!client)throw Error('الاتصال بالسحابة غير متاح');
- const {data:userData,error:userError}=await client.auth.getUser();
- if(userError||!userData?.user)throw Error('لم تُفعّل جلسة الإدارة السحابية في هذا المتصفح بعد.');
- const {data:authorized,error:authError}=await client.from('riwaq_admins').select('user_id').eq('user_id',userData.user.id).maybeSingle();
- if(authError)throw authError;
- if(!authorized)throw Error('الحساب الحالي لا يمتلك صلاحية نشر الجولات.');
- // Full values are published intentionally; never silently substitute a summary.
- const metrics={format:'riwaq-full-round-v1',source_id:record.id,date:record.date||'',values:(record.values||[]).map(x=>({tag:x.tag||'',value:x.value??''}))};
- const base={title:record.title,round_type:record.page==='teach'?'teaching':record.page==='impact'?'impact':'learning',summary:safePublicSummary(record),metrics};
- let publicationId=record.publicationId;
- if(!publicationId){
-   const {data:matches,error:lookupError}=await client.from('riwaq_publications').select('id').eq('metrics->>source_id',record.id).limit(1);
-   if(lookupError)throw lookupError;
-   publicationId=matches?.[0]?.id||null;
- }
- const request=publicationId
-  ?client.from('riwaq_publications').update(base).eq('id',publicationId).select('id').single()
-  :client.from('riwaq_publications').insert(base).select('id').single();
- const {data,error}=await request;
- if(error)throw error;
+ if(!admin||!firebaseAuth?.currentUser)throw Error('يلزم تسجيل الدخول إلى إدارة البوابة الرئيسية.');
+ const token=await firebaseAuth.currentUser.getIdToken();
+ const response=await fetch(PROJECT_URL+'/functions/v1/riwaq-firebase-publish',{
+  method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':KEY},
+  body:JSON.stringify({record})
+ });
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok||!data.ok)throw Error(data.error||'تعذّر النشر السحابي.');
  record.publicationId=data.id;
- const saved=getDrafts(),index=saved.findIndex(x=>x.id===record.id);
- if(index>=0){saved[index]={...saved[index],publicationId:data.id};putDrafts(saved);renderHomeRounds()}
+ const saved=getDrafts(),idx=saved.findIndex(x=>x.id===record.id);
+ if(idx>=0){saved[idx]={...saved[idx],publicationId:data.id};putDrafts(saved)}
  await loadPublic();
  return true;
 }
 let syncRunning=false;
 async function syncExistingRounds(){
- if(!client||visitorMode||syncRunning)return;
+ if(!client||!admin||!firebaseAuth?.currentUser||visitorMode||syncRunning)return;
  syncRunning=true;
  try{
-  const {data}=await client.auth.getUser();if(!data?.user)return;
-  const {data:a,error}=await client.from('riwaq_admins').select('user_id').eq('user_id',data.user.id).maybeSingle();
-  if(error||!a)return;
-  const pending=getDrafts().filter(r=>!r.publicationId);
-  for(const record of pending){try{await publishRound(record)}catch(e){console.warn('round sync failed',e.message)}}
- }catch(e){console.warn('sync unavailable',e.message)}
- finally{syncRunning=false}
+  for(const record of getDrafts().filter(x=>!x.publicationId)){
+   try{await publishRound(record)}catch(e){console.warn('تعذّرت مزامنة الجولة:',record.title,e.message)}
+  }
+ }finally{syncRunning=false}
 }
 
 // Photos are optional and stored separately in browser IndexedDB so their size never prevents saving a round.
