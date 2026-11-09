@@ -79,9 +79,26 @@ const serviceBinary={clock:document.getElementById('embedded-clock').textContent
 let activeService=null;
 function decodeEmbedded(b64){const raw=atob(b64);return new TextDecoder('utf-8').decode(Uint8Array.from(raw,c=>c.charCodeAt(0)))}
 function openService(s){
- let pdDocLink=document.getElementById('hazmProfessionalDevelopmentDocsLink');
- if(!pdDocLink){pdDocLink=document.createElement('a');pdDocLink.id='hazmProfessionalDevelopmentDocsLink';pdDocLink.className='btn teal';pdDocLink.textContent='📚 توثيق الإنماء المهني | لوحة البادليت';pdDocLink.href='./professional-development-board.html';pdDocLink.style.cssText='display:none;text-decoration:none;position:fixed;right:12px;top:85px;z-index:100000;max-width:155px;white-space:normal;text-align:center;line-height:1.6;box-shadow:0 5px 18px #0002;';document.body.append(pdDocLink);}
- pdDocLink.style.display=s.id==='pd'?'inline-flex':'none';
+
+ const frame=document.getElementById('serviceFrame');
+ let pdWrap=document.getElementById('hazmPdSideWrap');
+ if(s.id==='pd'){
+  if(!document.getElementById('hazmPdSideCss')){
+   const css=document.createElement('style');css.id='hazmPdSideCss';
+   css.textContent='#hazmPdSideWrap{display:flex;direction:rtl;gap:10px;flex:1 1 auto;min-height:0;align-items:stretch;width:100%}#hazmPdSideWrap #hazmPdSidePanel{width:180px;flex:0 0 180px;box-sizing:border-box;padding:18px 12px;background:#f7f3fa;border-left:1px solid #e6dcec;display:flex;flex-direction:column;gap:12px;align-items:stretch}#hazmPdSidePanel a{display:block;text-decoration:none;white-space:normal;line-height:1.7;text-align:center;padding:12px 8px}#hazmPdSideWrap #serviceFrame,body.service-expanded #hazmPdSideWrap #serviceFrame{flex:1 1 0!important;width:0!important;min-width:0!important;max-width:none!important;height:100%!important;min-height:0!important;margin:0!important;border:none!important;border-radius:0!important}body.service-expanded #hazmPdSideWrap{flex:1 1 auto!important;min-height:0!important;overflow:hidden!important}@media(max-width:700px){#hazmPdSideWrap #hazmPdSidePanel{width:112px;flex-basis:112px;padding:12px 5px}#hazmPdSidePanel a{font-size:12px;padding:9px 5px}#hazmPdSideWrap{gap:4px}}';
+   document.head.appendChild(css);
+  }
+  if(!pdWrap){
+   pdWrap=document.createElement('div');pdWrap.id='hazmPdSideWrap';
+   const side=document.createElement('aside');side.id='hazmPdSidePanel';
+   const label=document.createElement('strong');label.textContent='توثيق الإنماء المهني';label.style.cssText='color:#624080;text-align:center;font-size:14px';
+   const link=document.createElement('a');link.id='hazmProfessionalDevelopmentDocsLink';link.className='btn teal';link.href='./professional-development-board.html';link.textContent='📚 فتح لوحة التوثيق';
+   side.append(label,link);
+   frame.parentNode.insertBefore(pdWrap,frame);pdWrap.append(side,frame);
+  }
+ }else if(pdWrap){
+  pdWrap.parentNode.insertBefore(frame,pdWrap);pdWrap.remove();
+ }
  if(s.id==='activities'){window.location.href='./activities-padlet-board.html?type=initiatives';return;}
  if(s.id==='visitor'){window.location.href='./visitor.html';return;}
  if(s.id==='riwaq'){window.location.href='./riwaq-alhazm.html';return;}
@@ -119,7 +136,7 @@ function openService(s){
  document.getElementById('serviceFrame').srcdoc=decodeEmbedded(serviceBinary[s.id]);
  window.scrollTo(0,0);
 }
-function returnPortal(){const pdLink=document.getElementById('hazmProfessionalDevelopmentDocsLink');if(pdLink)pdLink.style.display='none';document.body.classList.remove('service-expanded');activeService=null;document.getElementById('serviceFrame').removeAttribute('srcdoc');document.getElementById('serviceFrame').removeAttribute('src');document.getElementById('embeddedService').classList.add('hide');document.querySelector('main .hero').classList.remove('hide');document.querySelector('.grid4').classList.remove('hide');for(const sec of document.querySelectorAll('main.wrap > section'))if(sec.id!=='embeddedService')sec.classList.remove('hide');window.scrollTo(0,0)}
+function returnPortal(){const pdWrap=document.getElementById('hazmPdSideWrap');if(pdWrap){const frame=document.getElementById('serviceFrame');pdWrap.parentNode.insertBefore(frame,pdWrap);pdWrap.remove();}document.body.classList.remove('service-expanded');activeService=null;document.getElementById('serviceFrame').removeAttribute('srcdoc');document.getElementById('serviceFrame').removeAttribute('src');document.getElementById('embeddedService').classList.add('hide');document.querySelector('main .hero').classList.remove('hide');document.querySelector('.grid4').classList.remove('hide');for(const sec of document.querySelectorAll('main.wrap > section'))if(sec.id!=='embeddedService')sec.classList.remove('hide');window.scrollTo(0,0)}
 document.getElementById('returnPortal').onclick=returnPortal;
 document.getElementById('fullView').onclick=()=>{const f=document.getElementById('serviceFrame');if(f.requestFullscreen)f.requestFullscreen();else{f.style.height=f.style.height==='95vh'?'78vh':'95vh'}};
 
