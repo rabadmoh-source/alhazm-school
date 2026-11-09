@@ -82,7 +82,7 @@ function openService(s){
 
  const frame=document.getElementById('serviceFrame');
  let pdWrap=document.getElementById('hazmPdSideWrap');
- if(s.id==='pd'){
+ if(s.id==='pd'||s.id==='family'){
   if(!document.getElementById('hazmPdSideCss')){
    const css=document.createElement('style');css.id='hazmPdSideCss';
    css.textContent='#hazmPdSideWrap{display:flex;direction:rtl;gap:10px;flex:1 1 auto;min-height:0;align-items:stretch;width:100%}#hazmPdSideWrap #hazmPdSidePanel{width:180px;flex:0 0 180px;box-sizing:border-box;padding:18px 12px;background:#f7f3fa;border-left:1px solid #e6dcec;display:flex;flex-direction:column;gap:12px;align-items:stretch}#hazmPdSidePanel a{display:block;text-decoration:none;white-space:normal;line-height:1.7;text-align:center;padding:12px 8px}#hazmPdSideWrap #serviceFrame,body.service-expanded #hazmPdSideWrap #serviceFrame{flex:1 1 0!important;width:0!important;min-width:0!important;max-width:none!important;height:100%!important;min-height:0!important;margin:0!important;border:none!important;border-radius:0!important}body.service-expanded #hazmPdSideWrap{flex:1 1 auto!important;min-height:0!important;overflow:hidden!important}@media(max-width:700px){#hazmPdSideWrap #hazmPdSidePanel{width:112px;flex-basis:112px;padding:12px 5px}#hazmPdSidePanel a{font-size:12px;padding:9px 5px}#hazmPdSideWrap{gap:4px}}';
@@ -91,9 +91,10 @@ function openService(s){
   if(!pdWrap){
    pdWrap=document.createElement('div');pdWrap.id='hazmPdSideWrap';
    const side=document.createElement('aside');side.id='hazmPdSidePanel';
-   const label=document.createElement('strong');label.textContent='توثيق الإنماء المهني';label.style.cssText='color:#624080;text-align:center;font-size:14px';
-   const link=document.createElement('a');link.id='hazmProfessionalDevelopmentDocsLink';link.className='btn teal';link.href='./professional-development-board.html';link.textContent='📚 فتح لوحة التوثيق';
-   side.append(label,link);
+   const label=document.createElement('strong');label.textContent=s.id==='pd'?'توثيق الإنماء المهني':'توثيق التواصل والشراكة المجتمعية';label.style.cssText='color:#624080;text-align:center;font-size:14px';
+   side.append(label);
+   const links=s.id==='pd'?[['📚 فتح لوحة التوثيق','./professional-development-board.html']]:[['🤝 الشراكات المجتمعية','./community-partnerships-board.html'],['🌱 المبادرات المجتمعية','./community-initiatives-board.html']];
+   for(const [name,href] of links){const link=document.createElement('a');link.className='btn teal';link.href=href;link.textContent=name;side.append(link)}
    frame.parentNode.insertBefore(pdWrap,frame);pdWrap.append(side,frame);
   }
  }else if(pdWrap){
