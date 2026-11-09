@@ -88,7 +88,7 @@ const services=[
 {id:'plan',icon:'📅',name:'متابعة تنفيذ الخطة المدرسية',desc:'إجراءات الخطة ومخطط جانت ونسب الإنجاز والتقارير والمتابعة.',tags:['teachers','admin'],active:true},
 {id:'monitor',icon:'🔒',name:'الزيارات الإشرافية',desc:'خدمة خاصة بالإدارة فقط.',tags:['admin'],active:false},
 {id:'activities',icon:'🏆',name:'الأنشطة والمبادرات',desc:'توثيق الأنشطة والمبادرات بالصور والأدلة وقياس أثرها على التعلم.',tags:['teachers','parents','admin'],active:true},
-{id:'safety',icon:'🛡️',name:'درع الحزم | الأمن والسلامة',desc:'الجولات التفقدية والحارس والإخلاء ولجنة السلامة والأدلة والتقارير.',tags:['admin'],active:true},
+{id:'safety',icon:'🛡️',name:'درع الحزم | الأمن والسلامة',desc:'الجولات التفقدية ومتابعة الحارس والإخلاء والطوارئ والتوعية والأنشطة — عرض المحتوى المنشور.',tags:['teachers','parents','admin'],active:true},
 {id:'quality',icon:'📊',name:'ميزان الحزم | التقويم الذاتي والجودة',desc:'المجالات الخمسة وبنك الأدلة وخطة التحسين وجاهزية التقويم الخارجي.',tags:['admin','teachers'],active:true}
 ];
 
@@ -150,6 +150,7 @@ function openService(s){
  }
  if(s.id==='activities'){window.location.href='./activities-padlet-board.html?type=initiatives&visitor=1';return;}
  if(s.id==='riwaq'){window.location.href='./riwaq-alhazm.html?visitor=1';return;}
+ if(s.id==='safety'){window.location.href='./safety-visitor.html';return;}
  if(!serviceBinary[s.id]){alert('هذه الخدمة غير مفعلة بعد');return}
  activeService=s.id;
  document.querySelector('main .hero').classList.add('hide');
