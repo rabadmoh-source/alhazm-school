@@ -31,11 +31,11 @@ columns=await query('hazm_board_columns','select=*&section=eq.'+section+'&order=
 const ids=columns.map(x=>x.id);
 posts=ids.length?await query('hazm_board_posts','select=*&column_id=in.('+ids.join(',')+')&order=position.asc,created_at.asc'):[];
 const postids=posts.map(x=>x.id);attachments=postids.length?await query('hazm_board_attachments','select=*&post_id=in.('+postids.join(',')+')'):[];
-locals=await localRead();draw();
-}catch(e){message('تعذر الاتصال بالسحابة: '+e.message+'. البيانات المحلية لم تُحذف.');locals=await localRead();columns=[];posts=[];attachments=[];draw()}}
+locals=admin?await localRead():[];draw();
+}catch(e){message('تعذر الاتصال بالسحابة: '+e.message+'. البيانات المحلية لم تُحذف.');locals=admin?await localRead():[];columns=[];posts=[];attachments=[];draw()}}
 function makeButton(label,action,css=''){const b=el('button',css,label);b.onclick=action;return b}
 async function fileLink(a){try{const r=await call('/storage/v1/object/sign/'+a.storage_bucket+'/'+a.storage_path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({expiresIn:3600})});if(r.signedURL){const signed=r.signedURL.startsWith('http')?r.signedURL:URL+'/storage/v1'+(r.signedURL.startsWith('/')?'':'/')+r.signedURL;return signed}throw Error('تعذر إنشاء رابط الملف')}catch(e){note('تعذر فتح المرفق: '+e.message);return null}}
-function renderAttachment(a,host){if(isImage(a)){const placeholder=el('div','txt','صورة مرفقة — اضغطي للعرض');placeholder.style='cursor:pointer;color:#65368b';placeholder.onclick=async()=>{const signed=await fileLink(a);if(!signed)return;const img=$('zoomImage');img.src=signed;$('viewer').classList.add('on')};host.append(placeholder)}else host.append(makeButton('عرض المرفق: '+a.filename,async()=>{const signed=await fileLink(a);if(signed)window.open(signed,'_blank','noopener')}))}
+function renderAttachment(a,host){if(isImage(a)){const img=el('img');img.alt=a.filename||'شاهد';img.loading='lazy';img.style.cursor='zoom-in';img.onclick=async()=>{const signed=await fileLink(a);if(!signed)return;$('zoomImage').src=signed;$('viewer').classList.add('on')};host.append(img);fileLink(a).then(link=>{if(link)img.src=link}).catch(()=>{})}else host.append(makeButton('عرض المرفق: '+a.filename,async()=>{const signed=await fileLink(a);if(signed)window.open(signed,'_blank','noopener')}))}
 function localFile(f,host){if(typeof f.data==='string'&&f.data.startsWith('data:image/')){const img=el('img');img.src=f.data;img.loading='lazy';img.onclick=()=>{$('zoomImage').src=f.data;$('viewer').classList.add('on')};host.append(img)}else if(f.data)host.append(makeButton('فتح المرفق',()=>{const a=el('a');a.href=f.data;a.download=f.name||'ملف';a.click()}))}
 function renderLane(c,isLocal=false){const lane=el('section','lane'),head=el('div','head');head.append(el('h2','',c.title||'بدون عنوان'));if(isLocal)head.append(el('div','meta','محفوظ على هذا المتصفح فقط، ولم يُنقل للسحابة'));head.append(el('p','',isLocal?(c.goal||''):c.description||''));const ops=el('div','row');
 if(!isLocal&&admin){ops.append(makeButton('تعديل العمود',()=>editColumn(c)),makeButton(c.published?'إلغاء النشر':'نشر العمود',()=>setPublished('hazm_board_columns',c,!c.published)),makeButton('حذف العمود',()=>removeColumn(c),'danger'))}
@@ -66,6 +66,16 @@ const rows=await query('hazm_board_attachments','select=id&post_id=eq.'+p.id);if
 }
 note('انتهى نقل السجل إلى السحابة كمسودة. راجعيه ثم انشري العمود والمنشورات المطلوبة.');await load()
 }catch(e){note('توقف النقل: '+e.message+'. لم نُزل السجلات المحلية؛ يمكن استئناف النقل لاحقًا.');await load()}}
+
+const backupInput=el('input');backupInput.type='file';backupInput.accept='.json,application/json';backupInput.style.display='none';document.body.append(backupInput);
+const importBtn=makeButton('استيراد سجلات من نسخة احتياطية',()=>backupInput.click());
+toolbar.append(importBtn);
+backupInput.onchange=async()=>{if(!admin){note('تسجيل الدخول الإداري مطلوب');return}const file=backupInput.files?.[0];if(!file)return;try{
+const parsed=JSON.parse(await file.text());const entries=parsed?.indexedDB?.[DB];if(!Array.isArray(entries))throw Error('لا تحتوي هذه النسخة على سجلات الأنشطة والمبادرات');
+const relevant=entries.filter(x=>x.type===section);if(!confirm('وجدت '+relevant.length+' سجلات من قسم '+(section==='activities'?'الأنشطة':'المبادرات')+'. سيتم نقلها كمسودات، مع إبقاء النسخة الاحتياطية دون تعديل. المتابعة؟'))return;
+let done=0;for(const record of relevant){await importLocal(record);done++}
+note('تمت مراجعة '+done+' سجلات. تحققي من ظهور المرفقات قبل نشرها.')}catch(e){note('تعذر الاستيراد: '+e.message)}finally{backupInput.value=''}};
+
 $('closeViewer').onclick=()=>{$('viewer').classList.remove('on');$('zoomImage').removeAttribute('src')};
 verify().then(load);
 })();
