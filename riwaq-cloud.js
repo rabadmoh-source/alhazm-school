@@ -70,7 +70,7 @@ async function boot(){
     import('https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js')
   ]);
   const config={apiKey:'AIzaSyCjmaFoQT1lx54ckRx-43ocY0Db5YIHfQ8',authDomain:'alhazm-school-portal.firebaseapp.com',projectId:'alhazm-school-portal',appId:'1:25747236318:web:60086e065e50d3eacda94f'};
-  const app=getApps().find(x=>x.options?.projectId===config.projectId)||initializeApp(config,'riwaq-firebase-shared');
+  const app=getApps().find(x=>x.options?.projectId===config.projectId)||initializeApp(config);
   firebaseAuth=getAuth(app);
   const db=getFirestore(app);
   onAuthStateChanged(firebaseAuth,async(user)=>{
