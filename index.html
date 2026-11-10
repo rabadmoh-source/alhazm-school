@@ -215,8 +215,10 @@ document.querySelectorAll('.chip').forEach(el=>el.onclick=()=>{document.querySel
 const shade=document.getElementById('shade');const close=()=>shade.classList.remove('show');document.getElementById('settings').onclick=()=>{document.getElementById('st').value=data.students;document.getElementById('pa').value=data.parents;document.getElementById('cl').value=data.classes;document.getElementById('nw').value=data.news;shade.classList.add('show')};document.getElementById('cancel').onclick=close;shade.onclick=e=>{if(e.target===shade)close()};document.getElementById('save').onclick=()=>{data={students:document.getElementById('st').value,parents:document.getElementById('pa').value,classes:document.getElementById('cl').value,news:document.getElementById('nw').value};store();refresh();close()};document.getElementById('reset').onclick=()=>{data={...defaults};store();refresh();close()};function time(){document.getElementById('clock').textContent=new Intl.DateTimeFormat('ar-OM',{dateStyle:'medium',timeStyle:'medium'}).format(new Date())}time();setInterval(time,1000);refresh();paint();
 // Deep-link only to the approved professional development service.
 if(new URLSearchParams(window.location.search).get('hazmService')==='pd'){
- const pdService=services.find(item=>item.id==='pd');
- if(pdService)openService(pdService);
+ window.addEventListener('load',()=>{
+  const pdService=services.find(item=>item.id==='pd');
+  if(pdService)openService(pdService);
+ },{once:true});
 }
 </script>
 <style id="q-evidence-pretty-patch">
