@@ -94,7 +94,7 @@ function openService(s){
    const side=document.createElement('aside');side.id='hazmPdSidePanel';
    const label=document.createElement('strong');label.textContent=s.id==='pd'?'توثيق الإنماء المهني':'توثيق التواصل والشراكة المجتمعية';label.style.cssText='color:#624080;text-align:center;font-size:14px';
    side.append(label);
-   const links=s.id==='pd'?[['📚 فتح لوحة التوثيق','./professional-development-board.html']]:[['🤝 الشراكات المجتمعية','./community-partnerships-board.html'],['🌱 المبادرات المجتمعية','./community-initiatives-board.html']];
+   const links=s.id==='pd'?[['📚 فتح لوحة التوثيق','./professional-development-board.html'],['📘 البادليت الرسمي للإنماء المهني','./professional-development-official-padlet.html']]:[['🤝 الشراكات المجتمعية','./community-partnerships-board.html'],['🌱 المبادرات المجتمعية','./community-initiatives-board.html']];
    for(const [name,href] of links){const link=document.createElement('a');link.className='btn teal'+(s.id==='family'?' hazmFamilyGreenLink':'');link.href=href;link.textContent=name;side.append(link)}
    if(s.id==='family'){
     const moved=[['overview','📋 نظرة عامة'],['matrix','🧩 مصفوفة الترابط'],['impacts','🎯 الأثر على تعلم الطلبة']];
