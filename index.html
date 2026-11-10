@@ -105,6 +105,12 @@ function openService(s){
      btn.onclick=()=>{const doc=frame.contentDocument;const target=doc?.querySelector('#nav [data-tab="'+id+'"]');if(target){target.click();syncMoved()}};
      side.append(btn);movedButtons.push(btn);
     }
+    // Parents' official Padlet follows the three existing family navigation buttons.
+    const parentsLink=document.createElement('a');
+    parentsLink.className='hazmFamilyGreenLink';
+    parentsLink.href='./parents-official-padlet.html';
+    parentsLink.textContent='👨‍👩‍👧‍👦 بادليت أولياء الأمور';
+    side.append(parentsLink);
     function syncMoved(){
      const doc=frame.contentDocument;if(!doc)return;
      for(const btn of movedButtons){
@@ -214,10 +220,11 @@ function paint(){const q=document.getElementById('search').value.trim().toLowerC
 document.querySelectorAll('.chip').forEach(el=>el.onclick=()=>{document.querySelectorAll('.chip').forEach(b=>b.classList.remove('active'));el.classList.add('active');filter=el.dataset.filter;paint()});document.getElementById('search').addEventListener('input',paint);
 const shade=document.getElementById('shade');const close=()=>shade.classList.remove('show');document.getElementById('settings').onclick=()=>{document.getElementById('st').value=data.students;document.getElementById('pa').value=data.parents;document.getElementById('cl').value=data.classes;document.getElementById('nw').value=data.news;shade.classList.add('show')};document.getElementById('cancel').onclick=close;shade.onclick=e=>{if(e.target===shade)close()};document.getElementById('save').onclick=()=>{data={students:document.getElementById('st').value,parents:document.getElementById('pa').value,classes:document.getElementById('cl').value,news:document.getElementById('nw').value};store();refresh();close()};document.getElementById('reset').onclick=()=>{data={...defaults};store();refresh();close()};function time(){document.getElementById('clock').textContent=new Intl.DateTimeFormat('ar-OM',{dateStyle:'medium',timeStyle:'medium'}).format(new Date())}time();setInterval(time,1000);refresh();paint();
 // Deep-link only to the approved professional development service.
-if(new URLSearchParams(window.location.search).get('hazmService')==='pd'){
+if(['pd','family'].includes(new URLSearchParams(window.location.search).get('hazmService'))){
  window.addEventListener('load',()=>{
-  const pdService=services.find(item=>item.id==='pd');
-  if(pdService)openService(pdService);
+  const requested=new URLSearchParams(window.location.search).get('hazmService');
+  const targetService=services.find(item=>item.id===requested);
+  if(targetService)openService(targetService);
  },{once:true});
 }
 </script>
