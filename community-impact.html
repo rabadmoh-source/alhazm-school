@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>الأثر على تعلم الطلبة | بوابة الحزم</title>
+<style>
+:root{--purple:#65368b;--teal:#138b8b;--ink:#30263a}*{box-sizing:border-box}
+body{margin:0;background:#f6f3f8;color:var(--ink);font-family:Tahoma,Arial,sans-serif}
+header{background:linear-gradient(115deg,#65368b,#138b8b);color:#fff;padding:25px max(20px,calc((100vw - 1080px)/2))}
+h1{font-size:clamp(23px,4vw,32px);margin:8px 0}header p{line-height:1.9;margin:8px 0 0}
+.back{display:inline-block;background:#fff;color:var(--purple);padding:9px 17px;border-radius:12px;text-decoration:none;font-weight:bold}
+main{max-width:1100px;margin:0 auto;padding:22px 16px 45px}.notice{background:#fff;border:1px solid #dfd2e6;border-radius:14px;padding:15px 18px;line-height:1.9}
+.stats{display:flex;flex-wrap:wrap;gap:13px;margin:20px 0}.stat{flex:1 1 180px;background:#fff;border-radius:15px;padding:17px;border-top:4px solid var(--teal);box-shadow:0 2px 10px #3220440d}.stat strong{display:block;font-size:26px;color:var(--purple)}
+h2{font-size:22px;margin:30px 0 14px;color:var(--purple)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:15px}
+.card{background:#fff;border-radius:16px;padding:19px;box-shadow:0 3px 14px #31203d12;border-right:5px solid var(--teal)}.card h3{margin:0 0 10px;font-size:18px;line-height:1.7}.badge{display:inline-block;font-size:12px;border-radius:20px;padding:5px 11px;background:#e1f4f0;color:#126c67;margin-bottom:9px}.pending{background:#fff3e5;color:#895b1a}.impact{white-space:pre-line;line-height:1.9;margin:8px 0 15px;font-size:14px}.source{color:var(--purple);text-decoration:none;font-weight:bold;font-size:13px}.empty{background:#fff;padding:20px;border-radius:14px;color:#63576a}.error{border-color:#bf6666;color:#922e39}footer{text-align:center;color:#746b78;padding:0 15px 25px;font-size:12px}
+.admin{margin-top:15px;display:flex;flex-wrap:wrap;gap:9px;align-items:center}.admin button,.edit button,.modal button{border:0;border-radius:10px;padding:10px 15px;background:var(--purple);color:#fff;cursor:pointer;font:inherit}.admin small{color:#62566d}.edit{margin-top:10px}.modal{position:fixed;inset:0;background:#170c25cc;display:none;align-items:center;justify-content:center;padding:15px;z-index:20}.modal.on{display:flex}.dialog{background:#fff;border-radius:18px;padding:22px;width:min(530px,100%);max-height:90vh;overflow:auto}.dialog label{display:block;margin:14px 0;font-weight:bold}.dialog input,.dialog textarea{width:100%;margin-top:7px;padding:11px;font:inherit;border:1px solid #ccbcd7;border-radius:9px}.dialog textarea{min-height:160px}.actions{display:flex;gap:10px;justify-content:flex-end}.modal .secondary{background:#eee7f1;color:#49325b}
+</style>
+</head>
+<body>
+<header><a class="back" id="back" href="./index.html">↩ العودة إلى بوابة الحزم</a><h1>🎯 الأثر على تعلم الطلبة</h1><p>متابعة موحدة لأثر الشراكات المجتمعية والمبادرات المجتمعية، مرتبطة بالتوثيق المنشور في لوحتي الحزم.</p></header>
+<main>
+<div class="notice" id="notice" role="status">جارٍ قراءة السجلات المنشورة...</div>
+<div class="admin" id="admin" hidden><button id="login">دخول الإدارة لإضافة الأثر</button><small id="adminStatus">السجلات المنشورة للعرض؛ إدراج الأثر خاص بالإدارة.</small></div>
+<div class="stats" id="stats" hidden></div>
+<section><h2>🤝 الشراكات المجتمعية</h2><div class="grid" id="partnerships"></div></section>
+<section><h2>🌱 المبادرات المجتمعية</h2><div class="grid" id="initiatives"></div></section>
+</main><footer>تعرض هذه الصفحة الأثر المسجل نصيًا في المنشورات المنشورة فقط؛ ولا تعتبر الأهداف أو الآثار المتوقعة نتائج متحققة.</footer>
+<div class="modal" id="loginModal"><form class="dialog" id="loginForm"><h2>دخول إدارة الحزم</h2><label>البريد الإلكتروني<input id="email" type="email" required autocomplete="username"></label><label>كلمة المرور<input id="password" type="password" required autocomplete="current-password"></label><div class="actions"><button type="button" class="secondary" data-close>إلغاء</button><button type="submit">دخول</button></div></form></div>
+<div class="modal" id="effectModal"><form class="dialog" id="effectForm"><h2 id="effectTitle">توثيق الأثر</h2><p>اكتبي الأثر الذي تم رصده. ويمكن توضيح أنه أثر مستهدف إذا لم يُقَس بعد.</p><label>الأثر على تعلم الطلبة<textarea id="effectText" required></textarea></label><div class="actions"><button type="button" class="secondary" data-close>إلغاء</button><button type="submit" id="saveEffect">حفظ الأثر ونشره</button></div></form></div>
+<script>
+(()=>{'use strict';
+const URL='https://fmmilquujleokfxcbnas.supabase.co';
+const KEY='sb_publishable_O_JqIM-VqzdGgU8VTvhRHQ_eQ9eTH5R';
+const visitor=new URLSearchParams(location.search).get('visitor')==='1';
+let token=visitor?'':sessionStorage.getItem('hazm_board_access')||'',admin=false,selected=null;
+document.getElementById('back').href=visitor?'./visitor.html':'./index.html';
+const groups=[{section:'community_partnerships',host:'partnerships',link:'community-partnerships-board.html'},{section:'community_initiatives',host:'initiatives',link:'community-initiatives-board.html'}];
+const txt=(tag,value,cls)=>{const x=document.createElement(tag);x.textContent=value;if(cls)x.className=cls;return x};
+async function request(path,options={}){const r=await fetch(URL+path,{...options,headers:{apikey:KEY,...(token?{Authorization:'Bearer '+token}:{}),...(options.headers||{})}});const data=await r.json().catch(()=>null);if(!r.ok)throw Error(data?.message||data?.error_description||data?.error||'HTTP '+r.status);return data}
+async function query(table,params){return request('/rest/v1/'+table+'?'+params)}
+async function verifyAdmin(){if(!token||visitor){admin=false;updateAdmin();return}try{const u=await request('/auth/v1/user');const rows=await query('riwaq_admins','select=user_id&user_id=eq.'+encodeURIComponent(u.id));admin=rows.length>0}catch{admin=false;token='';sessionStorage.removeItem('hazm_board_access')}updateAdmin()}
+function updateAdmin(){const area=document.getElementById('admin');area.hidden=visitor;document.getElementById('login').textContent=admin?'تسجيل خروج الإدارة':'دخول الإدارة لإضافة الأثر';document.getElementById('adminStatus').textContent=admin?'يمكنك إضافة أو تحديث الأثر من كل بطاقة.':'السجلات المنشورة للعرض؛ إدراج الأثر خاص بالإدارة.'}
+function extractImpact(value){
+ const lines=String(value||'').split(/\n|(?<=\.)\s+/).map(x=>x.trim()).filter(Boolean);
+ return lines.filter(x=>/^(?:[-•*]\s*)?(?:(?:الأثر|اثر)(?:\s+(?:على\s+تعلم\s+الطلبة|المتحقق|الفعلي|المستهدف|المتوقع|التعليمي|على\s+الطلبة))?|قياس\s+الأثر|نتائج\s+المبادرة|نتائج\s+الشراكة)\s*[:：\-–]/u.test(x)).join('\n');
+}
+async function loadGroup(g){
+ const cols=(await query('hazm_board_columns','select=id,title,description,position&section=eq.'+g.section+'&published=eq.true&order=position.asc,created_at.asc'));
+ const ids=cols.map(c=>c.id);const posts=ids.length?await query('hazm_board_posts','select=id,column_id,title,body,kind,published&column_id=in.('+ids.join(',')+')&published=eq.true'):[];
+ let documented=0;const host=document.getElementById(g.host);host.replaceChildren();
+ for(const c of cols){
+ const relevant=posts.filter(p=>p.column_id===c.id);
+  const effects=[extractImpact(c.description),...relevant.map(p=>p.title==='الأثر على تعلم الطلبة'?p.body:extractImpact([p.title,p.body].filter(Boolean).join('\n')))].filter(Boolean);
+  const card=txt('article','','card');card.append(txt('h3',c.title||'دون عنوان'));
+  if(effects.length){documented++;card.append(txt('span','أثر موثق كتابيًا','badge'));card.append(txt('p',effects.join('\n'),'impact'))}
+  else{card.append(txt('span','لم يُسجّل أثر كتابي بعد','badge pending'));card.append(txt('p','يمكن إضافة الأثر الفعلي أو المستهدف في وصف العمود أو في منشور دليل، وسيظهر هنا تلقائيًا بعد النشر.','impact'))}
+  const link=txt('a','عرض التوثيق والأدلة ←','source');link.href='./'+g.link+(visitor?'?visitor=1':'');card.append(link);host.append(card);
+  if(admin){const actions=txt('div','','edit'),edit=txt('button',effects.length?'✏️ إضافة أو تحديث الأثر':'＋ إدراج الأثر يدويًا');edit.type='button';edit.onclick=()=>{selected={column:c,post:relevant.find(p=>p.title==='الأثر على تعلم الطلبة')};document.getElementById('effectTitle').textContent='الأثر | '+c.title;document.getElementById('effectText').value=selected.post?.body||'';document.getElementById('effectModal').classList.add('on')};actions.append(edit);card.append(actions)}
+ }
+ if(!cols.length)host.append(txt('div','لا توجد سجلات منشورة في هذا القسم حتى الآن.','empty'));
+ return {total:cols.length,documented};
+}
+async function load(){
+ try{const results=await Promise.all(groups.map(loadGroup));const total=results.reduce((n,r)=>n+r.total,0),documented=results.reduce((n,r)=>n+r.documented,0);
+ const stats=document.getElementById('stats');stats.replaceChildren();for(const [label,value] of [['الشراكات المنشورة',results[0].total],['المبادرات المنشورة',results[1].total],['سجلات تتضمن أثرًا كتابيًا',documented],['سجلات تحتاج إلى توثيق الأثر',total-documented]]){const box=txt('div','','stat');box.append(txt('strong',String(value)),txt('span',label));stats.append(box)}stats.hidden=false;
+ document.getElementById('notice').textContent='يتم تجميع البيانات تلقائيًا من الشراكات والمبادرات المنشورة. حدّثت القراءة: '+new Date().toLocaleTimeString('ar-OM',{hour:'2-digit',minute:'2-digit'});
+ }catch(e){const n=document.getElementById('notice');n.classList.add('error');n.textContent='تعذر تحديث الأثر حاليًا: '+e.message+'؛ لم تتغير السجلات الأصلية.'}
+}
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>b.closest('.modal').classList.remove('on'));
+document.getElementById('login').onclick=()=>{if(admin){token='';admin=false;sessionStorage.removeItem('hazm_board_access');updateAdmin();load()}else document.getElementById('loginModal').classList.add('on')};
+document.getElementById('loginForm').onsubmit=async e=>{e.preventDefault();try{const data=await request('/auth/v1/token?grant_type=password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('email').value.trim(),password:document.getElementById('password').value})});token=data.access_token;await verifyAdmin();if(!admin)throw Error('الحساب لا يملك صلاحية الإدارة');sessionStorage.setItem('hazm_board_access',token);document.getElementById('loginModal').classList.remove('on');document.getElementById('password').value='';await load()}catch(err){alert('تعذر الدخول: '+err.message)}};
+document.getElementById('effectForm').onsubmit=async e=>{e.preventDefault();if(!admin||!selected)return;const value=document.getElementById('effectText').value.trim();if(!value)return;const button=document.getElementById('saveEffect');button.disabled=true;try{const body=JSON.stringify({title:'الأثر على تعلم الطلبة',body:value,published:true});if(selected.post){await request('/rest/v1/hazm_board_posts?id=eq.'+encodeURIComponent(selected.post.id),{method:'PATCH',headers:{'Content-Type':'application/json'},body})}else{await request('/rest/v1/hazm_board_posts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({column_id:selected.column.id,kind:'evidence',title:'الأثر على تعلم الطلبة',body:value,position:999,created_by:(await request('/auth/v1/user')).id,published:true})})}document.getElementById('effectModal').classList.remove('on');await load()}catch(err){alert('تعذر حفظ الأثر: '+err.message)}finally{button.disabled=false}};
+verifyAdmin().then(load);setInterval(()=>{if(!document.hidden)load()},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
+})();
+</script>
+<script src="./hazm-visitor-indicator.js" defer></script>
+</body></html>
