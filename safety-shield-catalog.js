@@ -47,5 +47,5 @@ async function load(){
  finally{host.dataset.loading='0';host.dataset.loaded=String(Date.now())}
 }
 function check(){const h=document.getElementById('hazmShieldCatalog');if(h&&(!h.dataset.loaded||Date.now()-Number(h.dataset.loaded)>30000))load()}
-document.addEventListener('DOMContentLoaded',()=>{const target=document.getElementById('mainContent');if(!target)return;new MutationObserver(check).observe(target,{childList:true});check();document.addEventListener('visibilitychange',()=>{if(!document.hidden)check()})});
+document.addEventListener('DOMContentLoaded',()=>{const target=document.getElementById('mainContent')||document.getElementById('hazmShieldCatalog')?.parentElement;if(!target)return;new MutationObserver(check).observe(target,{childList:true});check();document.addEventListener('visibilitychange',()=>{if(!document.hidden)check()})});
 })();
