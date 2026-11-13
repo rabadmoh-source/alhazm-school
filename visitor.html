@@ -119,7 +119,7 @@ function openService(s){
     for(const [id,label] of moved){
      const btn=document.createElement('button');btn.type='button';btn.className='hazmFamilyMovedNav';btn.textContent=label;btn.dataset.tab=id;
      btn.style.cssText='';
-     btn.onclick=()=>{const doc=frame.contentDocument;const target=doc?.querySelector('#nav [data-tab="'+id+'"]');if(target){target.click();syncMoved()}};
+     btn.onclick=()=>{if(id==='impacts'){window.location.assign('./community-impact.html?visitor=1');return}const doc=frame.contentDocument;const target=doc?.querySelector('#nav [data-tab="'+id+'"]');if(target){target.click();syncMoved()}};
      side.append(btn);movedButtons.push(btn);
     }
     // Parents' official Padlet follows the three existing family navigation buttons.
