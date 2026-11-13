@@ -16,19 +16,32 @@
  const query=(table,params)=>api('/rest/v1/'+table+'?'+params);
  async function verify(){if(!token||visitor){admin=false;updateLogin();return}try{const u=await api('/auth/v1/user'),rows=await query('riwaq_admins','select=user_id&user_id=eq.'+encodeURIComponent(u.id));admin=rows.length>0}catch{token='';admin=false;sessionStorage.removeItem('hazm_board_access')}updateLogin()}
  function updateLogin(){document.getElementById('admin').hidden=visitor;document.getElementById('login').textContent=admin?'تسجيل خروج الإدارة':'دخول الإدارة لإدراج الأثر'}
- function findEffect(value){return String(value||'').split(/\n|(?<=\.)\s+/).map(s=>s.trim()).filter(s=>/^(?:[-•]\s*)?(?:(?:الأثر|اثر)(?:\s+(?:المستهدف|المتوقع|المتحقق|الفعلي|على\s+تعلم\s+الطلبة))?|قياس\s+الأثر|نتائج\s+قياس\s+الأثر|أثر\s+(?:الجولة|النشاط))\s*[:：\-–]/u.test(s)).join('\n')}
- function impactType(s){if(/(?:الأثر\s+(?:المتحقق|الفعلي)|نتائج\s+قياس\s+الأثر)/u.test(s))return 'actual';if(/الأثر\s+(?:المستهدف|المتوقع)/u.test(s))return 'target';return 'written'}
+ // تمييز الأثر عن طريقة قياسه في جميع أقسام درع الحزم.
+ function classifyLines(value){
+  const lines=String(value||'').split(/\n|(?<=\.)\s+(?=(?:[-•]\s*)?(?:الأثر|اثر|قياس|نتائج))/u).map(s=>s.trim()).filter(Boolean);
+  const effects=[],methods=[];
+  for(const line of lines){
+   const normalized=line.replace(/^[-•]\s*/u,'');
+   if(/^(?:قياس\s+الأثر|آلية\s+قياس\s+الأثر|طريقة\s+قياس\s+الأثر)\s*[:：\-–]/u.test(normalized)){methods.push(normalized);continue}
+   if(/^(?:(?:الأثر|اثر)(?:\s+(?:المستهدف|المتوقع|المتحقق|الفعلي|على\s+تعلم\s+الطلبة))?|نتائج\s+قياس\s+الأثر|أثر\s+(?:الجولة|النشاط))\s*[:：\-–]/u.test(normalized))effects.push(normalized);
+  }
+  return {effects,methods};
+ }
+ function impactType(s){if(/^(?:الأثر\s+(?:المتحقق|الفعلي)|نتائج\s+قياس\s+الأثر)\s*[:：\-–]/u.test(s))return 'actual';if(/^الأثر\s+(?:المستهدف|المتوقع)\s*[:：\-–]/u.test(s))return 'target';return 'written'}
  async function load(){try{
   const target=document.getElementById('sections');target.replaceChildren();let total=0,withEffect=0,targetCount=0,actualCount=0;
   for(const [section,label,key] of sections){const heading=make('h2',label),grid=make('div','','grid');target.append(heading,grid);
    const cols=await query('hazm_board_columns','select=id,title,description,position&section=eq.'+section+'&published=eq.true&order=position.asc,created_at.asc');
    const ids=cols.map(c=>c.id),posts=ids.length?await query('hazm_board_posts','select=id,column_id,title,body,published&column_id=in.('+ids.join(',')+')&published=eq.true'):[];
-   for(const col of cols){total++;const mine=posts.filter(p=>p.column_id===col.id),manual=mine.find(p=>p.title==='الأثر على رعاية الطلبة وتعلمهم');const texts=[findEffect(col.description),...mine.map(p=>p.title==='الأثر على رعاية الطلبة وتعلمهم'?p.body:findEffect([p.title,p.body].filter(Boolean).join('\n')))].filter(Boolean);
+   for(const col of cols){total++;const mine=posts.filter(p=>p.column_id===col.id),manual=mine.find(p=>p.title==='الأثر على رعاية الطلبة وتعلمهم');const parsed=[classifyLines(col.description),...mine.filter(p=>p.title!=='الأثر على رعاية الطلبة وتعلمهم').map(p=>classifyLines([p.title,p.body].filter(Boolean).join('\n')))];
+    const texts=[...parsed.flatMap(x=>x.effects),...(manual?(classifyLines(manual.body).effects.length?classifyLines(manual.body).effects:[manual.body.trim()].filter(Boolean)):[])];
+    const methods=parsed.flatMap(x=>x.methods);
     const types=texts.map(impactType),status=types.includes('actual')?'actual':types.includes('target')?'target':texts.length?'written':'missing';
     if(texts.length)withEffect++;if(status==='actual')actualCount++;else if(status==='target')targetCount++;
     const badge=status==='actual'?'الأثر المتحقق موثق':status==='target'?'الأثر المستهدف موثق':status==='written'?'أثر مكتوب يحتاج تحديد نوعه':'يحتاج إلى توثيق الأثر';
     const card=make('article','','card');card.append(make('h3',col.title||'دون عنوان'),make('span',badge,'badge'+(status==='missing'?' pending':'')));
-    card.append(make('p',texts.length?texts.join('\n'):(visitor?'بانتظار توثيق الأثر من الإدارة.':'لم يُدرج أثر بعد؛ يمكنك كتابته هنا مباشرة.'),'effect'));
+    card.append(make('p',texts.length?texts.join('\n'):(methods.length?'آلية القياس محددة، والأثر المستهدف أو المتحقق لم يُوثق بعد.':(visitor?'بانتظار توثيق الأثر من الإدارة.':'لم يُدرج أثر بعد؛ يمكنك كتابته هنا مباشرة.')),'effect'));
+    if(methods.length)card.append(make('p',methods.join('\n'),'effect'));
     const a=make('a','عرض الجولة أو النشاط والأدلة ←');a.href='./safety-approved/safety-padlet-board.html?section='+encodeURIComponent(key)+(visitor?'&visitor=1':'');card.append(a);
     if(admin){const b=make('button',texts.length?'✏️ إضافة أو تحديث الأثر':'＋ إدراج الأثر يدويًا');b.type='button';b.onclick=()=>{current={col,manual};document.getElementById('effectTitle').textContent='الأثر | '+col.title;document.getElementById('effectText').value=manual?.body||'';document.getElementById('effectDialog').showModal()};card.append(b)}grid.append(card)}
    if(!cols.length)grid.append(make('p','لا توجد سجلات منشورة في هذا القسم حتى الآن.'));
