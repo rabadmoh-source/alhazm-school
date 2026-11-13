@@ -4,12 +4,12 @@
   const nav=document.getElementById('nav');if(!nav||nav.querySelector('[data-hazm-impact]'))return;
   const button=document.createElement('button');button.type='button';button.dataset.hazmImpact='1';
   const icon=document.createElement('span');icon.className='hazmSafetyIcon';icon.textContent='🎯';
-  const label=document.createElement('span');label.textContent='قياس أثر الرعاية والتعلم';button.append(icon,label);
+  const label=document.createElement('span');label.textContent='قياس الأثر على دعم تعلم الطلبة';button.append(icon,label);
   button.onclick=()=>{
    nav.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
    button.classList.add('active');
    const heading=document.getElementById('heading'),subtitle=document.getElementById('subtitle'),content=document.getElementById('mainContent'),stats=document.getElementById('stats');
-   if(heading)heading.textContent='قياس أثر الرعاية والتعلم';
+   if(heading)heading.textContent='قياس الأثر على دعم تعلم الطلبة';
    if(subtitle)subtitle.textContent='الأثر المكتوب للجولات والأنشطة المنشورة في درع الحزم';
    if(stats)stats.style.display='none';
    document.body.classList.add('safetyPadletMode');
