@@ -39,7 +39,7 @@ async function load(){
    const filtered=rows.filter(r=>(!chosen||r.section===chosen)&&(!keyword||(r.title||'').toLocaleLowerCase('ar').includes(keyword)||r.titleSection.includes(keyword)));
    filtered.forEach((r,i)=>{const tr=el('tr');tr.append(el('td',String(i+1)),el('td',r.title||'دون عنوان'),el('td',r.titleSection));
     const status=el('span',r.status[0],'catalogBadge '+r.status[1]);tr.append(el('td'));tr.lastChild.append(status);
-    const action=el('td'),a=el('a','فتح التوثيق ←','catalogLink');a.href='./safety-approved/safety-padlet-board.html?section='+encodeURIComponent(r.key)+(location.search.includes('visitor=1')?'&visitor=1':'');action.append(a);tr.append(action);tbody.append(tr)});
+    const action=el('td'),a=el('a','فتح التوثيق ←','catalogLink');a.href='./safety-approved/safety-padlet-board.html?section='+encodeURIComponent(r.key)+(location.search.includes('visitor=1')||/safety-visitor\.html$/i.test(location.pathname)?'&visitor=1':'');action.append(a);tr.append(action);tbody.append(tr)});
    if(!filtered.length){const tr=el('tr'),td=el('td','لا توجد نتائج مطابقة.');td.colSpan=5;td.className='catalogEmpty';tr.append(td);tbody.append(tr)}
   };
   search.addEventListener('input',draw);select.addEventListener('change',draw);draw();host.replaceChildren(wrapper);
