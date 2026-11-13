@@ -14,6 +14,7 @@ main{max-width:1100px;margin:0 auto;padding:22px 16px 45px}.notice{background:#f
 h2{font-size:22px;margin:30px 0 14px;color:var(--purple)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:15px}
 .card{background:#fff;border-radius:16px;padding:19px;box-shadow:0 3px 14px #31203d12;border-right:5px solid var(--teal)}.card h3{margin:0 0 10px;font-size:18px;line-height:1.7}.badge{display:inline-block;font-size:12px;border-radius:20px;padding:5px 11px;background:#e1f4f0;color:#126c67;margin-bottom:9px}.pending{background:#fff3e5;color:#895b1a}.impact{white-space:pre-line;line-height:1.9;margin:8px 0 15px;font-size:14px}.source{color:var(--purple);text-decoration:none;font-weight:bold;font-size:13px}.empty{background:#fff;padding:20px;border-radius:14px;color:#63576a}.error{border-color:#bf6666;color:#922e39}footer{text-align:center;color:#746b78;padding:0 15px 25px;font-size:12px}
 .admin{margin-top:15px;display:flex;flex-wrap:wrap;gap:9px;align-items:center}.admin button,.edit button,.modal button{border:0;border-radius:10px;padding:10px 15px;background:var(--purple);color:#fff;cursor:pointer;font:inherit}.admin small{color:#62566d}.edit{margin-top:10px}.modal{position:fixed;inset:0;background:#170c25cc;display:none;align-items:center;justify-content:center;padding:15px;z-index:20}.modal.on{display:flex}.dialog{background:#fff;border-radius:18px;padding:22px;width:min(530px,100%);max-height:90vh;overflow:auto}.dialog label{display:block;margin:14px 0;font-weight:bold}.dialog input,.dialog textarea{width:100%;margin-top:7px;padding:11px;font:inherit;border:1px solid #ccbcd7;border-radius:9px}.dialog textarea{min-height:160px}.actions{display:flex;gap:10px;justify-content:flex-end}.modal .secondary{background:#eee7f1;color:#49325b}
+.admin[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -53,7 +54,7 @@ async function loadGroup(g){
   const effects=[extractImpact(c.description),...relevant.map(p=>p.title==='الأثر على تعلم الطلبة'?p.body:extractImpact([p.title,p.body].filter(Boolean).join('\n')))].filter(Boolean);
   const card=txt('article','','card');card.append(txt('h3',c.title||'دون عنوان'));
   if(effects.length){documented++;card.append(txt('span','أثر موثق كتابيًا','badge'));card.append(txt('p',effects.join('\n'),'impact'))}
-  else{card.append(txt('span','لم يُسجّل أثر كتابي بعد','badge pending'));card.append(txt('p','يمكن إضافة الأثر الفعلي أو المستهدف في وصف العمود أو في منشور دليل، وسيظهر هنا تلقائيًا بعد النشر.','impact'))}
+  else{card.append(txt('span','لم يُسجّل أثر كتابي بعد','badge pending'));card.append(txt('p',visitor?'بانتظار توثيق الأثر من إدارة المدرسة.':'يمكن إضافة الأثر يدويًا من هذه البطاقة، وسيظهر هنا تلقائيًا بعد الحفظ.','impact'))}
   const link=txt('a','عرض التوثيق والأدلة ←','source');link.href='./'+g.link+(visitor?'?visitor=1':'');card.append(link);host.append(card);
   if(admin){const actions=txt('div','','edit'),edit=txt('button',effects.length?'✏️ إضافة أو تحديث الأثر':'＋ إدراج الأثر يدويًا');edit.type='button';edit.onclick=()=>{selected={column:c,post:relevant.find(p=>p.title==='الأثر على تعلم الطلبة')};document.getElementById('effectTitle').textContent='الأثر | '+c.title;document.getElementById('effectText').value=selected.post?.body||'';document.getElementById('effectModal').classList.add('on')};actions.append(edit);card.append(actions)}
  }
