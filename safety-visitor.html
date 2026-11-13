@@ -23,22 +23,24 @@ main{flex:1;min-width:0;padding:20px}
 .info{color:#665a76;font-size:13px;margin:14px 0}
 iframe{display:block;width:100%;height:calc(100vh - 176px);min-height:550px;border:0;border-radius:12px;background:var(--bg)}
 @media(max-width:850px){.layout{display:block;min-height:0}aside{width:auto;padding:14px}.nav{display:flex;overflow-x:auto;gap:5px}.nav button{min-width:max-content;width:auto;margin:0}aside h1{font-size:19px}aside p{margin-bottom:12px}main{padding:12px}iframe{height:75vh;min-height:490px}}
-</style></head><body>
+</style><style>.catalogPanel{background:white;border:1px solid #e5dfea;border-radius:15px;padding:18px}.catalogHead h2{color:#5a4378}.catalogSummary{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:9px;margin:12px 0}.catalogCounter{background:#ebf6f5;border-radius:9px;padding:9px;text-align:center}.catalogCounter strong{display:block;color:#70558d;font-size:24px}.catalogFilters{display:flex;gap:8px;margin:12px 0}.catalogFilters input,.catalogFilters select{flex:1;min-width:150px;padding:9px;border:1px solid #ddd7e9;border-radius:8px}.catalogTableWrap{overflow:auto}.catalogTable{min-width:650px;width:100%;border-collapse:collapse}.catalogTable th,.catalogTable td{text-align:right;padding:10px;border-bottom:1px solid #eae4ef}.catalogBadge{border-radius:20px;padding:4px 8px}.catalogBadge.actual{background:#d7f5de}.catalogBadge.target{background:#e1efff}.catalogBadge.pending{background:#fff2dd}.catalogLink{color:#70558d;font-weight:bold}.catalogMessage{text-align:center;padding:18px;color:#675879}</style><script src="./safety-shield-catalog.js" defer></script></head><body>
 <div class="brandbar"><img src="./alhazm-school-logo.png" alt="شعار المدرسة"><div><strong>مدرسة الحزم للتعليم الأساسي (١–٤)</strong><small>بوابة الحزم الرقمية · درع الحزم · نافذة الزوار</small></div></div>
 <div class="layout"><aside><h1>🛡️ درع الحزم</h1><p>الأمن والسلامة · الاطلاع على المحتوى المنشور</p><nav class="nav" id="nav" aria-label="أقسام درع الحزم"></nav></aside>
-<main><div class="header"><h2 id="heading">الجولات التفقدية</h2><a class="back" href="./visitor.html">↩ العودة إلى بوابة الزوار</a></div><p class="info">تعرض هذه النافذة السجلات والأدلة المنشورة فقط، وتتزامن تلقائيًا مع إدارة درع الحزم.</p><iframe id="boardFrame" title="توثيق درع الحزم المنشور"></iframe></main></div>
+<main><div class="header"><h2 id="heading">الجولات التفقدية</h2><a class="back" href="./visitor.html">↩ العودة إلى بوابة الزوار</a></div><p class="info">تعرض هذه النافذة السجلات والأدلة المنشورة فقط، وتتزامن تلقائيًا مع إدارة درع الحزم.</p><div id="hazmShieldCatalog" style="display:none"></div><iframe id="boardFrame" title="توثيق درع الحزم المنشور"></iframe></main></div>
 <script>
 (()=>{
 'use strict';
 const sections=[
+['overview','📋','الرئيسية — السجل الموحد'],
+['impact','🎯','قياس الأثر على تعلم الطلبة'],
 ['inspections','🔎','الجولات التفقدية'],
 ['guard','🛡️','متابعة الحارس'],
 ['evacuation','🚨','الإخلاء والطوارئ'],
 ['awareness','🌱','التوعية والأنشطة']
 ];
-const nav=document.getElementById('nav'),frame=document.getElementById('boardFrame'),heading=document.getElementById('heading');
+const nav=document.getElementById('nav'),frame=document.getElementById('boardFrame'),heading=document.getElementById('heading'),catalog=document.getElementById('hazmShieldCatalog');
 let active='';
-const safeSection=key=>sections.some(x=>x[0]===key)?key:'inspections';
+const safeSection=key=>sections.some(x=>x[0]===key)?key:'overview';
 function show(key){
 key=safeSection(key);
 active=key;
@@ -46,10 +48,10 @@ const info=sections.find(x=>x[0]===key);
 heading.textContent=info[2];
 nav.querySelectorAll('button').forEach(b=>{b.classList.toggle('active',b.dataset.section===key);b.setAttribute('aria-current',b.dataset.section===key?'page':'false')});
 frame.title=info[2]+' — عرض الزوار';
-frame.src='./safety-approved/safety-padlet-board.html?visitor=1&embedded=1&section='+encodeURIComponent(key);
+if(key==='overview'){catalog.style.display='block';frame.style.display='none';frame.removeAttribute('src')}else{catalog.style.display='none';frame.style.display='block';frame.src=key==='impact'?'./safety-impact.html?visitor=1':'./safety-approved/safety-padlet-board.html?visitor=1&embedded=1&section='+encodeURIComponent(key)}
 history.replaceState(null,'','?section='+encodeURIComponent(key));
 }
 sections.forEach(([key,icon,label])=>{const b=document.createElement('button');b.type='button';b.dataset.section=key;b.innerHTML='<span class="ico">'+icon+'</span><span>'+label+'</span>';b.addEventListener('click',()=>show(key));nav.append(b)});
-show(new URLSearchParams(location.search).get('section')||'inspections');
+show(new URLSearchParams(location.search).get('section')||'overview');
 })();
 </script><script src="./hazm-visitor-indicator.js?v=20261109-visitor-badge1" defer></script></body></html>
