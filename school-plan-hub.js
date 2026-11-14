@@ -25,6 +25,7 @@
   let authenticatedUser = null;
   const EVIDENCE_BUCKET = 'hazm-plan-evidence';
   const MAX_EVIDENCE_BYTES = 10 * 1024 * 1024;
+  const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
   let stagedAttachments = [];
   let uploadingEvidence = false;
 
@@ -350,7 +351,17 @@
       const result=await response.json();
       const signed=result.signedURL||result.signedUrl;
       if (!signed) throw Error('تعذر إنشاء رابط العرض');
-      window.open(signed.startsWith('http')?signed:SUPABASE+'/storage/v1'+signed,'_blank','noopener,noreferrer');
+      const url=signed.startsWith('http')?signed:SUPABASE+'/storage/v1'+signed;
+      if (file.type==='video/mp4'||/\.mp4$/i.test(file.name||'')) {
+        const host=document.getElementById('monthlyVideoPreview');
+        host.replaceChildren();
+        const video=document.createElement('video');
+        video.controls=true;video.preload='none';video.playsInline=true;
+        video.style.cssText='width:100%;max-height:340px;border-radius:10px;background:#111';
+        video.src=url;
+        host.append(video);
+        host.scrollIntoView({behavior:'smooth',block:'nearest'});
+      } else window.open(url,'_blank','noopener,noreferrer');
       buttonStatus.textContent='';
     } catch(error) {buttonStatus.textContent='تعذر فتح المرفق: '+error.message;}
   }
@@ -367,14 +378,16 @@
     uploadingEvidence=true;
     try {
       for (const file of files.slice(0,3)) {
-        if (file.size>MAX_EVIDENCE_BYTES) {notice.textContent='لم يُرفع «'+file.name+'»: تجاوز 10 ميجابايت.';continue;}
-        if (!/\.(jpe?g|png|webp|gif|pdf|docx?|xlsx?|pptx?)$/i.test(file.name)) {notice.textContent='نوع الملف غير مدعوم: '+file.name;continue;}
+        const isVideo=/\.mp4$/i.test(file.name);
+        const limit=isVideo?MAX_VIDEO_BYTES:MAX_EVIDENCE_BYTES;
+        if (file.size>limit) {notice.textContent='لم يُرفع «'+file.name+'»: تجاوز '+(isVideo?'50':'10')+' ميجابايت.';continue;}
+        if (!/\.(jpe?g|png|webp|gif|pdf|docx?|xlsx?|pptx?|mp4)$/i.test(file.name)) {notice.textContent='نوع الملف غير مدعوم: '+file.name;continue;}
         const extension=file.name.split('.').pop().toLowerCase();
         const path=authenticatedUser.id+'/school-plan/'+selected.id+'/'+Date.now()+'-'+crypto.randomUUID()+'.'+extension;
         notice.textContent='جارٍ رفع «'+file.name+'» إلى التخزين المستقل...';
         try {
           const response=await fetch(SUPABASE+'/storage/v1/object/'+EVIDENCE_BUCKET+'/'+path,{
-            method:'POST',headers:{...headers(),'Content-Type':file.type||'application/octet-stream','cache-control':'3600','x-upsert':'false'},body:file
+            method:'POST',headers:{...headers(),'Content-Type':isVideo?'video/mp4':(file.type||'application/octet-stream'),'cache-control':'3600','x-upsert':'false'},body:file
           });
           if(!response.ok)throw Error('رمز '+response.status);
           stagedAttachments.push({name:file.name,path,size:file.size,type:file.type});
@@ -415,6 +428,7 @@
     stagedAttachments=[];
     $('monthlyFiles').value='';
     $('monthlyUploadStatus').textContent='';
+    $('monthlyVideoPreview').replaceChildren();
     attachmentList($('monthlyAttachments'),[]);
     document.querySelectorAll('#monthlyModal input,#monthlyModal select,#monthlyModal textarea').forEach(x=>x.disabled=!admin);
     $('monthlySave').classList.toggle('hidden',!admin);
