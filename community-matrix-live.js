@@ -10,7 +10,7 @@
   let currentRequest = 0;
   const css = document.createElement('style');
   css.textContent = `
-    #hazmCommunityLiveMatrix{direction:rtl;flex:1 1 0;min-width:0;overflow:auto;background:#f7f5fa;padding:24px;color:#302942;font:15px/1.8 Tahoma,Arial,sans-serif}
+    #hazmCommunityLiveMatrix{direction:rtl;flex:1 1 auto;width:100%;min-width:0;overflow:auto;background:#f7f5fa;padding:24px;color:#302942;font:15px/1.8 Tahoma,Arial,sans-serif}
     #hazmCommunityLiveMatrix .m-card{background:white;border:1px solid #e4ddec;border-radius:15px;padding:21px;margin-bottom:16px}
     #hazmCommunityLiveMatrix h2{margin:0;color:#493563;font-size:23px}
     #hazmCommunityLiveMatrix p{margin:5px 0 16px;color:#695f75}
@@ -150,7 +150,7 @@
     currentRequest++;
     document.getElementById('hazmCommunityLiveMatrix')?.remove();
     const frame=document.getElementById('serviceFrame');
-    if(frame)frame.style.display='';
+    if(frame)frame.style.removeProperty('display');
     document.querySelector('#hazmPdSidePanel [data-tab="matrix"]')?.classList.remove('active');
   }
   function show() {
@@ -159,7 +159,7 @@
     if(!side||!frame)return;
     close();
     const requestId=++currentRequest;
-    frame.style.display='none';
+    frame.style.setProperty('display','none','important');
     const host=node('section',undefined);host.id='hazmCommunityLiveMatrix';
     const parent=frame.parentNode;parent.append(host);
     const card=node('div',undefined,'m-card');
