@@ -18,7 +18,7 @@ h2{font-size:22px;margin:30px 0 14px;color:var(--purple)}.grid{display:grid;grid
 </style>
 </head>
 <body>
-<header><a class="back" id="back" href="./index.html">↩ العودة إلى بوابة الحزم</a><h1>🎯 الأثر على تعلم الطلبة</h1><p>متابعة موحدة لأثر الشراكات المجتمعية والمبادرات المجتمعية، مرتبطة بالتوثيق المنشور في لوحتي الحزم.</p></header>
+<header><a class="back" id="backToFamily" href="./index.html?hazmService=family">↩ العودة إلى التواصل والشراكة المجتمعية</a> <a class="back" id="back" href="./index.html">العودة إلى البوابة</a><h1>🎯 الأثر على تعلم الطلبة</h1><p>متابعة موحدة لأثر الشراكات المجتمعية والمبادرات المجتمعية، مرتبطة بالتوثيق المنشور في لوحتي الحزم.</p></header>
 <main>
 <div class="notice" id="notice" role="status">جارٍ قراءة السجلات المنشورة...</div>
 <div class="admin" id="admin" hidden><button id="login">دخول الإدارة لإضافة الأثر</button><small id="adminStatus">السجلات المنشورة للعرض؛ إدراج الأثر خاص بالإدارة.</small></div>
@@ -35,6 +35,7 @@ const KEY='sb_publishable_O_JqIM-VqzdGgU8VTvhRHQ_eQ9eTH5R';
 const visitor=new URLSearchParams(location.search).get('visitor')==='1';
 let token=visitor?'':sessionStorage.getItem('hazm_board_access')||'',admin=false,selected=null;
 document.getElementById('back').href=visitor?'./visitor.html':'./index.html';
+document.getElementById('backToFamily').href=visitor?'./visitor.html?hazmService=family':'./index.html?hazmService=family';
 const groups=[{section:'community_partnerships',host:'partnerships',link:'community-partnerships-board.html'},{section:'community_initiatives',host:'initiatives',link:'community-initiatives-board.html'}];
 const txt=(tag,value,cls)=>{const x=document.createElement(tag);x.textContent=value;if(cls)x.className=cls;return x};
 async function request(path,options={}){const r=await fetch(URL+path,{...options,headers:{apikey:KEY,...(token?{Authorization:'Bearer '+token}:{}),...(options.headers||{})}});const data=await r.json().catch(()=>null);if(!r.ok)throw Error(data?.message||data?.error_description||data?.error||'HTTP '+r.status);return data}
