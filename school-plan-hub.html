@@ -55,7 +55,7 @@ input,select,textarea{font:inherit;border:1px solid #cfc7da;border-radius:9px;pa
 <label>نتيجة المتابعة<select id="monthlyAssessment"><option>يسير وفق الخطة</option><option>يحتاج إلى دعم</option><option>يواجه تحديات</option></select></label>
 <label>الأثر المباشر الملحوظ<textarea id="monthlyImmediate" placeholder="ما التغير الذي ظهر في الممارسة أو استجابة الطلبة؟ اكتبي ملاحظة واقعية قابلة للتحقق."></textarea></label>
 <label>الشواهد أو روابطها (اختياري)<textarea id="monthlyEvidence" placeholder="نتائج، تقارير، ملاحظات صفية أو روابط أدلة منشورة دون بيانات خاصة"></textarea></label>
-<div class="evidence-attachments"><label for="monthlyFiles">📎 إرفاق صور أو ملفات داعمة (اختياري)</label><input id="monthlyFiles" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" multiple><p class="note">تُحفظ الملفات في مساحة سحابية مستقلة وخاصة؛ الحد الأقصى 10 ميجابايت للملف، و3 ملفات في كل مرة. لا تُرفقي بيانات شخصية للطلبة أو المعلمات في الشواهد المنشورة.</p><div id="monthlyUploadStatus" class="status" role="status"></div><div id="monthlyAttachments" class="history"></div></div>
+<div class="evidence-attachments"><label for="monthlyFiles">📎 إرفاق صور أو ملفات أو فيديو MP4 (اختياري)</label><input id="monthlyFiles" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp4,video/mp4" multiple><p class="note">تُحفظ الملفات في مساحة سحابية مستقلة وخاصة؛ الحد الأقصى 10 ميجابايت للصور والمستندات و50 ميجابايت لفيديو MP4، و3 ملفات في كل مرة. تُشغَّل الفيديوهات عند الطلب فقط. لا تُرفقي بيانات شخصية للطلبة أو المعلمات في الشواهد المنشورة.</p><div id="monthlyUploadStatus" class="status" role="status"></div><div id="monthlyAttachments" class="history"></div><div id="monthlyVideoPreview"></div></div>
 <label>الإجراء التحسيني أو الدعم المطلوب<textarea id="monthlyImprovement" placeholder="توصية مختصرة أو خطوة متابعة لاحقة"></textarea></label>
 <div class="actions"><button id="monthlyCancel" class="button outline">إغلاق</button><button id="monthlySave" class="button">حفظ المتابعة الشهرية</button></div></div></div>
 <div id="finalModal" class="overlay hidden"><div class="dialog" role="dialog" aria-modal="true"><h3 id="finalTitle">بطاقة قياس الأثر النهائي</h3><p id="finalContext" class="note"></p>
@@ -64,5 +64,5 @@ input,select,textarea{font:inherit;border:1px solid #cfc7da;border-radius:9px;pa
 <label>الأثر النهائي على تعلم الطلبة أو الأداء المدرسي<textarea id="finalResult" placeholder="وصفي مقدار التحسن ومدى تحقق المؤشر بالاستناد إلى الأدلة"></textarea></label>
 <label>شواهد القياس والتوصيات<textarea id="finalEvidence" placeholder="الأدلة والتوصيات، مع حماية خصوصية الطلبة"></textarea></label>
 <div class="actions"><button id="finalCancel" class="button outline">إغلاق</button><button id="finalSave" class="button">حفظ قياس الأثر النهائي</button></div></div></div>
-<script src="./school-plan-hub.js?v=20261114-evidence" defer></script>
+<script src="./school-plan-hub.js?v=20261114-evidence-video" defer></script>
 </body></html>
