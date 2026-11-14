@@ -51,12 +51,16 @@ async function choices(){
 function showForm(index,action,row){
  const cover=el('div',undefined,'hazm-matrix-modal'),box=el('form',undefined,'hazm-matrix-dialog');
  box.append(el('h2','✏️ تحرير الترابط — الإجراء '+(index+1)),el('p',action.title||action.name||action.action||'الإجراء المسجل'));
- const goal=el('textarea'),target=el('textarea'),measured=el('textarea'),related=el('select');
+ const category=el('select'),goal=el('textarea'),target=el('textarea'),measured=el('textarea'),related=el('select');
+ category.append(new Option('اختاري تصنيف الإجراء',''));
+ ['التكافل المجتمعي','التوعية','دعم التعلم','التوثيق والمتابعة'].forEach(x=>category.append(new Option(x,x)));
+ category.value=action.matrixCategory||'';
  goal.value=action.proceduralGoal||'';target.value=action.targetImpact||'';measured.value=action.measuredImpact||'';
  related.append(new Option('لم يُحدَّد ارتباط بدليل بعد',''));
  for(const choice of evidenceChoices)related.append(new Option(choice.title,choice.id));
  related.value=action.matrixEvidenceId||'';
  function field(label,input){const l=el('label',label);l.append(input);box.append(l);}
+ field('تصنيف الإجراء',category);
  field('الهدف الإجرائي المعتمد',goal);
  field('الشراكة أو المبادرة المرتبطة (اختياري)',related);
  field('الأثر المستهدف (لا يعني تحقق الأثر)',target);
@@ -79,7 +83,7 @@ function showForm(index,action,row){
    const titleOf=x=>String(x.title||x.name||x.action||x.activity||'');
    if(titleOf(latest)!==titleOf(action))throw Error('تغير ترتيب الإجراءات؛ افتحي المصفوفة مجددًا لحماية البيانات.');
    const selected=evidenceChoices.find(x=>x.id===related.value);
-   const next={...latest,proceduralGoal:goal.value.trim(),matrixEvidenceId:selected?.id||'',matrixEvidenceTitle:selected?.title||'',targetImpact:target.value.trim(),measuredImpact:measured.value.trim()};
+   const next={...latest,matrixCategory:category.value,proceduralGoal:goal.value.trim(),matrixEvidenceId:selected?.id||'',matrixEvidenceTitle:selected?.title||'',targetImpact:target.value.trim(),measuredImpact:measured.value.trim()};
    const payload={...original.payload,actions:list.map((x,i)=>i===index?next:x)};
    const updated=await api('/rest/v1/hazm_community_state?id=eq.main&updated_at=eq.'+encodeURIComponent(original.updated_at)+'&select=id,updated_at',{
     method:'PATCH',headers:{Prefer:'return=representation'},
@@ -91,7 +95,7 @@ function showForm(index,action,row){
    row.children[2].classList.remove('m-empty');
    row.children[3].textContent=next.measuredImpact?'أثر متحقق: '+next.measuredImpact:(next.targetImpact?'أثر مستهدف: '+next.targetImpact:'لم يُربط أثر موثق');
    row.children[3].classList.toggle('m-empty',!next.measuredImpact&&!next.targetImpact);
-   action.proceduralGoal=next.proceduralGoal;action.matrixEvidenceId=next.matrixEvidenceId;action.matrixEvidenceTitle=next.matrixEvidenceTitle;action.targetImpact=next.targetImpact;action.measuredImpact=next.measuredImpact;
+   action.matrixCategory=next.matrixCategory;action.proceduralGoal=next.proceduralGoal;action.matrixEvidenceId=next.matrixEvidenceId;action.matrixEvidenceTitle=next.matrixEvidenceTitle;action.targetImpact=next.targetImpact;action.measuredImpact=next.measuredImpact;
    const evidence= row.querySelector('.matrix-evidence');
    if(evidence)evidence.textContent=next.matrixEvidenceTitle||'';
    cover.remove();
