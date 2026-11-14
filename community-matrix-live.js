@@ -119,6 +119,8 @@
         tr.append(node('td',String(i+1)));
         const evidenceTitle=field(item,['matrixEvidenceTitle']);
         const actionCell=node('td',display(item,actionKeys,'إجراء محفوظ رقم '+(i+1)));
+        const category=field(item,['matrixCategory']);
+        if(category)actionCell.append(node('div','التصنيف: '+category,'m-tag'));
         if(evidenceTitle)actionCell.append(node('div','🔗 دليل مرتبط: '+evidenceTitle,'m-muted'));
         tr.append(actionCell);
         const goalText=field(item,goalKeys);
