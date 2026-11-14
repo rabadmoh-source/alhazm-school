@@ -133,6 +133,7 @@ function openService(s){
     parentsLink.href='./parents-official-padlet.html?visitor=1';
     parentsLink.textContent='👨‍👩‍👧‍👦 بادليت أولياء الأمور';
     side.append(parentsLink);
+    const familyReturn=document.createElement('a');familyReturn.className='hazmFamilyGreenLink';familyReturn.href='./visitor.html?hazmService=family';familyReturn.textContent='↩ العودة إلى التواصل والشراكة المجتمعية';side.append(familyReturn);
     function syncMoved(){
      const doc=frame.contentDocument;if(!doc)return;
      for(const btn of movedButtons){
