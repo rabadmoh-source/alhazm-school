@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مرصد الحزم | متابعة الخطة المدرسية</title>
+<style>
+:root{--purple:#70558d;--teal:#188f90;--ink:#293047;--bg:#f8f7fc;--line:#e2dceb}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.85 Tahoma,Arial,sans-serif}
+header{background:#fff;border-bottom:3px solid var(--teal);padding:12px 24px;display:flex;align-items:center;gap:15px;flex-wrap:wrap}
+header img{width:65px;height:65px;object-fit:contain}header h1{margin:0;color:var(--purple);font-size:22px}header small{display:block;color:#617085}a{color:inherit;text-decoration:none}
+.back{margin-right:auto;background:#e6f5f3;color:#126a6e;border:1px solid #aad6d1;padding:9px 13px;border-radius:10px;font-weight:700}
+.shell{display:flex;gap:18px;max-width:1600px;margin:20px auto;padding:0 18px;align-items:stretch}
+aside{width:240px;flex-shrink:0;background:var(--purple);border-radius:19px;padding:20px 14px;min-height:calc(100vh - 145px);color:#fff;box-shadow:0 6px 20px #42345a21}
+aside strong{display:block;text-align:center;font-size:17px;margin-bottom:20px}aside button{display:block;width:100%;text-align:right;margin:10px 0;border-radius:12px;border:1px solid #75d9d1;background:var(--teal);color:white;padding:13px 12px;cursor:pointer;font:700 14px Tahoma,Arial}
+aside button.active{background:white;color:var(--purple);border-color:white}aside a{display:block;padding:11px 9px;border:1px solid #c8b5db;border-radius:10px;margin-top:22px;text-align:center}
+main{min-width:0;flex:1}.hero{background:linear-gradient(110deg,#74558f,#1a9898);border-radius:18px;padding:22px 25px;color:#fff}.hero h2{margin:0 0 5px}.hero p{margin:0}
+.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}.metric{background:white;border:1px solid var(--line);border-radius:14px;padding:13px;text-align:center}.metric b{display:block;font-size:27px;color:var(--purple)}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin:15px 0}.panel h3{margin:0 0 9px;color:var(--purple)}.note{color:#617085;font-size:13px}.filters{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+input,select,textarea{font:inherit;border:1px solid #cfc7da;border-radius:9px;padding:9px;max-width:100%}.filters input{flex:1;min-width:190px}.filters select{min-width:145px}
+.tablewrap{overflow:auto;max-height:65vh;border:1px solid #e5dfeb;border-radius:12px}table{width:100%;border-collapse:collapse;min-width:920px}th,td{padding:11px 10px;text-align:right;border-bottom:1px solid #ece8f1;vertical-align:middle}th{background:#f2edf8;color:#58446c;position:sticky;top:0;z-index:1}tr:nth-child(even){background:#fcfbfe}.titlecell{min-width:290px;font-weight:700}.muted{color:#7b8291;font-size:12px}
+.badge{border-radius:99px;padding:4px 9px;background:#f0ecf6;color:#685384;display:inline-block;white-space:nowrap;font-size:12px}.badge.good{background:#ddf4e9;color:#176e4e}.badge.warning{background:#fff1c9;color:#8a630d}
+.button{background:var(--teal);color:#fff;padding:8px 12px;border:0;border-radius:9px;cursor:pointer;font:700 13px Tahoma}.button.outline{background:#f2edf8;color:var(--purple)}
+.empty{text-align:center;padding:33px;color:#788092}.hidden{display:none!important}.overlay{position:fixed;inset:0;background:#20152e9c;display:grid;place-items:center;z-index:20;padding:15px}.dialog{background:#fff;border-radius:17px;padding:22px;width:min(620px,100%);max-height:90vh;overflow:auto}.dialog label{display:block;margin:12px 0}.dialog input,.dialog select,.dialog textarea{display:block;width:100%;margin-top:5px}.dialog textarea{min-height:100px}.dialog .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}.status{margin:10px 0;color:#6a597e}
+@media(max-width:830px){.shell{display:block;padding:0 10px}aside{width:100%;min-height:0;display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:14px}aside strong{width:100%;margin:0}aside button{width:calc(50% - 4px);margin:0}aside a{margin:0;width:100%}.summary{grid-template-columns:repeat(2,1fr)}header{padding:10px}header h1{font-size:16px}}
+</style></head><body>
+<header><img src="./alhazm-school-logo.png" alt="شعار الحزم"><div><h1>مرصد الحزم لمتابعة الخطة المدرسية</h1><small>مدرسة الحزم للتعليم الأساسي (1–4) · العام الدراسي 2026/2027</small></div><a id="backLink" class="back" href="./index.html">↩ العودة إلى البوابة الرئيسية</a></header>
+<div class="shell"><aside><strong>💜 متابعة الخطة المدرسية</strong>
+<button data-tab="initiatives" class="active">🌱 المبادرات المضمنة</button>
+<button data-tab="development">📚 برامج الإنماء المرتبطة</button>
+<button data-tab="projects">🎯 المشاريع والفعاليات المرتبطة</button>
+<button data-tab="impact">📊 قياس الأثر</button>
+<a href="./school-plan-2026-2027.pdf" target="_blank" rel="noopener">📄 فتح الخطة المدرسية المعتمدة (PDF)</a>
+<a id="legacyLink" href="./index.html?legacyPlan=1">🗂️ سجل المتابعة السابق (للمراجعة)</a>
+</aside><main><div class="hero"><h2 id="sectionTitle">🌱 المبادرات المضمنة</h2><p id="sectionDescription">المبادرات الواردة ضمن إجراءات الخطة، مع متابعة تنفيذها وتوثيق أثرها.</p></div>
+<div class="summary"><div class="metric">الإجمالي<b id="allCount">0</b></div><div class="metric">تم التنفيذ<b id="doneCount">0</b></div><div class="metric">لم يكتمل التنفيذ<b id="pendingCount">0</b></div><div class="metric">تم قياس الأثر<b id="impactCount">0</b></div></div>
+<div class="panel"><div class="note" id="sourceNotice">تُستدعى البنود من سجل الخطة، وتظهر التحديثات المعتمدة في نسختي الإدارة والزوار.</div><div id="syncStatus" class="status" role="status"></div>
+<div class="filters"><input id="search" placeholder="البحث باسم المبادرة أو المنفذ أو المجال"><select id="areaFilter"><option value="">جميع المجالات</option></select><select id="statusFilter"><option value="">جميع حالات التنفيذ</option><option value="مخطط">مخطط</option><option value="تم التنفيذ">تم التنفيذ</option></select></div>
+<div class="tablewrap"><table><thead><tr><th>المبادرة / البرنامج / المشروع</th><th>المنفذ</th><th>حالة التنفيذ</th><th>حالة قياس الأثر</th><th>التوثيق والمتابعة</th></tr></thead><tbody id="rows"></tbody></table></div>
+<p class="note">البيانات السابقة محفوظة، ويمكن الاطلاع على الخطة الرسمية كاملة من زر «فتح الخطة المدرسية المعتمدة».</p></div>
+</main></div>
+<div id="modal" class="overlay hidden"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><h3 id="modalTitle">بطاقة المتابعة</h3><p id="modalGoal" class="note"></p>
+<label>حالة التنفيذ<select id="editExecution"><option value="مخطط">مخطط</option><option value="تم التنفيذ">تم التنفيذ</option></select></label>
+<label>حالة قياس الأثر<select id="editImpact"><option value="لم يحن موعد قياس الأثر">لم يحن موعد قياس الأثر</option><option value="حان موعد قياس الأثر">حان موعد قياس الأثر</option><option value="تم قياس الأثر">تم قياس الأثر</option></select></label>
+<label>تاريخ المتابعة<input type="date" id="editDate"></label><label>التوثيق والمتابعة<textarea id="editDocumentation" placeholder="الإنجازات والملاحظات، وروابط الأدلة غير الحساسة"></textarea></label>
+<label>نتائج قياس الأثر والتوصيات<textarea id="editResult" placeholder="يُستكمل بعد إجراء القياس"></textarea></label>
+<div class="actions"><button id="cancel" class="button outline">إغلاق</button><button id="save" class="button">حفظ التحديث ونشره</button></div></div></div>
+<script src="./school-plan-hub.js" defer></script>
+</body></html>
