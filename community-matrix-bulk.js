@@ -34,7 +34,7 @@ const css=document.createElement('style');css.textContent=`
 .hazm-bulk-overlay{position:fixed;inset:0;z-index:2147483050;background:#1d1637c9;display:flex;justify-content:center;align-items:center;padding:12px;direction:rtl}
 .hazm-bulk-box{background:#faf9fd;color:#322443;border-radius:17px;width:min(1250px,100%);max-height:94vh;display:flex;flex-direction:column;padding:18px;font:14px/1.7 Tahoma,Arial}
 .hazm-bulk-box h2{margin:0 0 7px;color:#654887}.hazm-bulk-box p{margin:5px 0 12px}.hazm-bulk-scroll{overflow:auto;border:1px solid #d7cde1;border-radius:12px;flex:1}
-.hazm-bulk-box table{border-collapse:collapse;width:100%;min-width:910px}.hazm-bulk-box th,.hazm-bulk-box td{border-bottom:1px solid #e8e0ed;padding:9px;vertical-align:top}
+.hazm-bulk-box table{border-collapse:collapse;width:100%;min-width:910px}.hazm-bulk-box:not(.show-details) .bulk-detail{display:none}.hazm-bulk-box:not(.show-details) table{min-width:550px}.hazm-bulk-box th,.hazm-bulk-box td{border-bottom:1px solid #e8e0ed;padding:9px;vertical-align:top}
 .hazm-bulk-box th{position:sticky;top:0;background:#ebe3f3;z-index:2}.hazm-bulk-box tr:nth-child(even){background:#f7f3fa}
 .hazm-bulk-box textarea,.hazm-bulk-box select{width:100%;box-sizing:border-box;border:1px solid #d1c2dd;border-radius:8px;padding:8px;font:inherit;background:#fff;min-height:63px}
 .hazm-bulk-box select{min-height:39px}.hazm-bulk-controls{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:12px}
@@ -79,9 +79,9 @@ async function openBulk(host){
   const evidences=await evidenceOptions();
   const cover=el('div',undefined,'hazm-bulk-overlay'),box=el('div',undefined,'hazm-bulk-box');
   box.append(el('h2','✨ مراجعة الترابط المقترح للإجراءات الـ37'));
-  box.append(el('p','الاقتراحات للمراجعة فقط. يمكنك تعديلها أو إلغاء تحديد أي صف؛ لن يُحفظ شيء حتى تضغطي «اعتماد المحدد». ولا يُضاف أثر متحقق تلقائيًا.'));
+  box.append(el('p','راجعِي الإجراء وتصنيفه وأثره المستهدف في جدول واحد؛ التفاصيل الإضافية اختيارية. لا يُحفظ شيء إلا بعد اعتمادك، ولا يُضاف أثر متحقق تلقائيًا.'));
   const scroll=el('div',undefined,'hazm-bulk-scroll'),table=el('table'),thead=el('thead'),hr=el('tr');
-  for(const t of ['اعتماد','الإجراء','تصنيف الإجراء','الهدف الإجرائي المقترح','الأثر المستهدف المقترح','الدليل المرتبط (اختياري)'])hr.append(el('th',t));
+  ['اعتماد','الإجراء','تصنيف الإجراء','الهدف الإجرائي المقترح','الأثر المستهدف المقترح','الدليل المرتبط (اختياري)'].forEach((t,j)=>{const th=el('th',t);if(j===3||j===5)th.classList.add('bulk-detail');hr.append(th)});
   thead.append(hr);table.append(thead);
   const tbody=el('tbody'),entries=[];
   actions.forEach((a,i)=>{
@@ -101,11 +101,12 @@ async function openBulk(host){
    related.value=a.matrixEvidenceId||'';
    const exact=evidences.filter(e=>e.rawTitle&&title.includes(e.rawTitle));
    if(!related.value&&exact.length===1)related.value=exact[0].id;
-   for(const input of [category,goal,impact,related]){const td=el('td');td.append(input);tr.append(td);}
+   for(const [j,input] of [category,goal,impact,related].entries()){const td=el('td');if(j===1||j===3)td.classList.add('bulk-detail');td.append(input);tr.append(td);}
    tbody.append(tr);entries.push({i,title,check,category,goal,impact,related});
   });
   table.append(tbody);scroll.append(table);box.append(scroll);
-  const foot=el('div',undefined,'hazm-bulk-controls'),cancel=el('button','إلغاء','secondary'),toggle=el('button','تحديد جميع الصفوف','secondary'),save=el('button','اعتماد المحدد وحفظه');
+  const foot=el('div',undefined,'hazm-bulk-controls'),cancel=el('button','إلغاء','secondary'),toggle=el('button','تحديد جميع الصفوف','secondary'),details=el('button','إظهار تفاصيل الأهداف والأدلة','secondary'),save=el('button','اعتماد المحدد وحفظه');
+  details.onclick=()=>{const expanded=box.classList.toggle('show-details');details.textContent=expanded?'إخفاء التفاصيل':'إظهار تفاصيل الأهداف والأدلة';};
   cancel.onclick=()=>cover.remove();
   toggle.onclick=()=>{entries.forEach(x=>x.check.checked=true);};
   save.onclick=async()=>{
@@ -142,7 +143,7 @@ async function openBulk(host){
    }catch(e){alert('لم يُحفظ الترابط الجماعي: '+e.message)}
    finally{save.disabled=false;}
   };
-  foot.append(cancel,toggle,save);box.append(foot);cover.append(box);document.body.append(cover);
+  foot.append(cancel,details,toggle,save);box.append(foot);cover.append(box);document.body.append(cover);
  }catch(e){alert('تعذر إعداد المراجعة: '+e.message)}
  finally{dialogBusy=false;}
 }
