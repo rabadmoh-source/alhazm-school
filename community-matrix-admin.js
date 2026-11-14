@@ -103,11 +103,11 @@ function showForm(index,action,row){
 async function mount(host){
  if(host.dataset.adminMatrixEditor)return;
  host.dataset.adminMatrixEditor='loading';
- const note=el('div','جارٍ التحقق من صلاحية تعديل الترابط…','matrix-admin-note');
- host.querySelector('.m-card')?.after(note);
+ let note=host.querySelector('.matrix-admin-note');
+ if(!note){note=el('div','جارٍ التحقق من صلاحية تعديل الترابط…','matrix-admin-note');host.querySelector('.m-card')?.after(note);}
  const valid=await authorized();
  if(!host.isConnected)return;
- if(!valid){note.textContent='🔒 تحرير الترابط خاص بالإدارة. سجلي الدخول السحابي من «نظرة عامة»، ثم أعيدي فتح المصفوفة.';host.dataset.adminMatrixEditor='auth';return;}
+ if(!valid){note.textContent='🔒 تحرير الترابط خاص بالإدارة. سجلي الدخول السحابي من «نظرة عامة»، ثم أعيدي فتح المصفوفة.';host.dataset.adminMatrixEditor='auth';host.dataset.authToken=token();return;}
  await choices();
  const table=host.querySelector('tbody');
  if(!table){note.textContent='جارٍ تحميل سجلات الترابط…';host.dataset.adminMatrixEditor='retry';return;}
@@ -143,6 +143,9 @@ async function mount(host){
 }
 setInterval(()=>{
  const host=document.getElementById('hazmCommunityLiveMatrix');
- if(host && ['','retry','auth'].includes(host.dataset.adminMatrixEditor||'') && host.querySelector('tbody'))mount(host);
+ if(host && host.querySelector('tbody')){
+  const state=host.dataset.adminMatrixEditor||'';
+  if(state===''||state==='retry'||(state==='auth'&&host.dataset.authToken!==token()))mount(host);
+ }
 },900);
 })();
