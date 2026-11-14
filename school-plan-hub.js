@@ -6,7 +6,7 @@
   const SUPABASE = 'https://fmmilquujleokfxcbnas.supabase.co';
   const KEY = 'sb_publishable_O_JqIM-VqzdGgU8VTvhRHQ_eQ9eTH5R';
   const SECTION = 'school_plan_2026';
-  const token = visitor ? '' : (sessionStorage.getItem('hazm_board_access') || '');
+  let token = visitor ? '' : (sessionStorage.getItem('hazm_board_access') || '');
   const labels = {
     initiatives: ['🌱 المبادرات المضمنة', 'المبادرات المضمنة ضمن الخطة المدرسية ومتابعة تنفيذها وتوثيق أثرها.'],
     development: ['📚 برامج الإنماء المرتبطة', 'برامج التدريب والإنماء المهني المرتبطة بأهداف الخطة المدرسية.'],
@@ -55,6 +55,55 @@
     } catch (_) { admin = false; }
   }
   function status(message) { $('syncStatus').textContent = message; }
+  function authControl() {
+    if (visitor) return;
+    let button = $('planAuth');
+    if (!button) {
+      button = document.createElement('button');
+      button.id = 'planAuth'; button.className = 'button outline';
+      $('syncStatus').after(button);
+    }
+    button.textContent = admin ? 'تسجيل خروج الإدارة' : 'دخول إدارة الحزم';
+    button.onclick = admin ? () => {
+      sessionStorage.removeItem('hazm_board_access');
+      token = ''; admin = false; authenticatedUser = null;
+      authControl(); render();
+    } : login;
+  }
+  async function login() {
+    const box = document.createElement('div'); box.className = 'overlay';
+    const form = document.createElement('form'); form.className = 'dialog';
+    const heading = document.createElement('h3'); heading.textContent = 'دخول إدارة الحزم';
+    const email = document.createElement('input'); email.type = 'email'; email.required = true; email.autocomplete = 'username';
+    const password = document.createElement('input'); password.type = 'password'; password.required = true; password.autocomplete = 'current-password';
+    const emailLabel = document.createElement('label'); emailLabel.textContent = 'البريد الإلكتروني'; emailLabel.append(email);
+    const passLabel = document.createElement('label'); passLabel.textContent = 'كلمة المرور'; passLabel.append(password);
+    const actions = document.createElement('div'); actions.className = 'actions';
+    const close = document.createElement('button'); close.type = 'button'; close.className = 'button outline'; close.textContent = 'إلغاء';
+    close.onclick = () => box.remove();
+    const enter = document.createElement('button'); enter.type = 'submit'; enter.className = 'button'; enter.textContent = 'دخول';
+    actions.append(close, enter); form.append(heading, emailLabel, passLabel, actions); box.append(form); document.body.append(box);
+    form.onsubmit = async event => {
+      event.preventDefault(); enter.disabled = true;
+      try {
+        const response = await fetch(SUPABASE + '/auth/v1/token?grant_type=password', {
+          method: 'POST', headers: {'apikey':KEY, 'Content-Type':'application/json'},
+          body: JSON.stringify({email:email.value.trim(), password:password.value})
+        });
+        if (!response.ok) throw Error('تعذر التحقق من بيانات الدخول.');
+        const session = await response.json();
+        token = session.access_token;
+        await verifyAdmin();
+        if (!admin) throw Error('الحساب ليس ضمن حسابات إدارة الحزم المصرح لها.');
+        sessionStorage.setItem('hazm_board_access',token);
+        box.remove(); authControl(); await loadCloud(); render();
+      } catch (error) {
+        token = ''; admin = false; authenticatedUser = null;
+        alert(error.message);
+      } finally { enter.disabled = false; }
+    };
+    email.focus();
+  }
   async function loadCloud() {
     const list = await rest('hazm_board_columns?select=id,source_local_id,description,created_by&section=eq.' + SECTION + '&published=eq.true&limit=1000');
     const next = new Map();
@@ -193,6 +242,7 @@
         $('areaFilter').append(new Option(area, area));
       }
       await verifyAdmin();
+      authControl();
       try { await loadCloud(); }
       catch (_) { status('تعذر الاتصال بسجل النشر المركزي حاليًا؛ تُعرض البيانات الأساسية فقط، ولا يمكن اعتماد حالة التزامن.'); }
       render();
