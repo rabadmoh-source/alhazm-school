@@ -26,7 +26,7 @@ iframe{display:block;width:100%;height:calc(100vh - 176px);min-height:550px;bord
 </style><style>.catalogPanel{background:white;border:1px solid #e5dfea;border-radius:15px;padding:18px}.catalogHead h2{color:#5a4378}.catalogSummary{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:9px;margin:12px 0}.catalogCounter{background:#ebf6f5;border-radius:9px;padding:9px;text-align:center}.catalogCounter strong{display:block;color:#70558d;font-size:24px}.catalogFilters{display:flex;gap:8px;margin:12px 0}.catalogFilters input,.catalogFilters select{flex:1;min-width:150px;padding:9px;border:1px solid #ddd7e9;border-radius:8px}.catalogTableWrap{overflow:auto}.catalogTable{min-width:650px;width:100%;border-collapse:collapse}.catalogTable th,.catalogTable td{text-align:right;padding:10px;border-bottom:1px solid #eae4ef}.catalogBadge{border-radius:20px;padding:4px 8px}.catalogBadge.actual{background:#d7f5de}.catalogBadge.target{background:#e1efff}.catalogBadge.pending{background:#fff2dd}.catalogBadge.documented{background:#dff6f3;color:#116c68}.catalogLink{color:#70558d;font-weight:bold}.catalogMessage{text-align:center;padding:18px;color:#675879}</style><script src="./safety-shield-catalog.js?v=20261114-evidence-status" defer></script></head><body>
 <div class="brandbar"><img src="./alhazm-school-logo.png" alt="شعار المدرسة"><div><strong>مدرسة الحزم للتعليم الأساسي (١–٤)</strong><small>بوابة الحزم الرقمية · درع الحزم · نافذة الزوار</small></div></div>
 <div class="layout"><aside><h1>🛡️ درع الحزم</h1><p>الأمن والسلامة · الاطلاع على المحتوى المنشور</p><nav class="nav" id="nav" aria-label="أقسام درع الحزم"></nav></aside>
-<main><div class="header"><h2 id="heading">الجولات التفقدية</h2><a class="back" href="./visitor.html">↩ العودة إلى بوابة الزوار</a></div><p class="info">تعرض هذه النافذة السجلات والأدلة المنشورة فقط، وتتزامن تلقائيًا مع إدارة درع الحزم.</p><div id="hazmShieldCatalog" style="display:none"></div><iframe id="boardFrame" title="توثيق درع الحزم المنشور"></iframe></main></div>
+<main><div class="header"><h2 id="heading">الجولات التفقدية</h2><a class="back" href="./visitor.html">↩ العودة إلى بوابة الزوار</a></div><p class="info">تعرض هذه النافذة السجلات والأدلة المنشورة فقط، وتتزامن تلقائيًا مع إدارة درع الحزم.</p><div id="hazmShieldCatalog" style="display:none"></div><div id="busLink" style="display:none;padding:12px;margin:0 0 12px;background:#e9f7f5;border-radius:13px"><a href="./safety-bus-inspections.html?visitor=1" style="display:inline-block;background:#168f91;color:#fff;text-decoration:none;padding:10px 16px;border-radius:10px;font-weight:bold">🚌 الاطلاع على سجل تفقد الحافلات (1–14) ←</a></div><iframe id="boardFrame" title="توثيق درع الحزم المنشور"></iframe></main></div>
 <script>
 (()=>{
 'use strict';
@@ -45,7 +45,7 @@ function show(key){
 key=safeSection(key);
 active=key;
 const info=sections.find(x=>x[0]===key);
-heading.textContent=info[2];
+heading.textContent=info[2];document.getElementById('busLink').style.display=key==='inspections'?'block':'none';
 nav.querySelectorAll('button').forEach(b=>{b.classList.toggle('active',b.dataset.section===key);b.setAttribute('aria-current',b.dataset.section===key?'page':'false')});
 frame.title=info[2]+' — عرض الزوار';
 if(key==='overview'){catalog.style.display='block';frame.style.display='none';frame.removeAttribute('src')}else{catalog.style.display='none';frame.style.display='block';frame.src=key==='impact'?'./safety-impact.html?visitor=1':'./safety-approved/safety-padlet-board.html?visitor=1&embedded=1&section='+encodeURIComponent(key)}
