@@ -13,7 +13,7 @@ const procedures = JSON.parse(match[1]);
 const goals = JSON.parse(match[2]);
 
 const addedGoal = {
-  id: '18-new', area: 'القيادة والإدارة والحوكمة',
+  id: '18', area: 'القيادة والإدارة والحوكمة',
   name: 'تطوير كفاءة العمليات الإدارية والإشرافية من خلال توظيف الأنظمة الرقمية في المتابعة والتوثيق وقياس الأداء المدرسي.',
   indicator: 'تمكّن 80% من أعضاء الهيئة الإدارية والتدريسية المستهدفين من توظيف الأنظمة الرقمية في عمليات المتابعة والتوثيق، بما يسهم في تحسين كفاءة الأداء المدرسي خلال العام الدراسي 2026/2027م.'
 };
@@ -31,12 +31,13 @@ function classify(s) {
   return null;
 }
 
+const renumber = id => /^\d+$/.test(String(id)) && Number(id) >= 18 ? String(Number(id) + 1) : String(id || '');
 const rows = procedures.map(p => ({
   id: 'old-' + p.id,
   title: p.task,
   owner: p.owner || '',
   area: p.area || '',
-  goal: p.goal || '',
+  goal: p.goal ? renumber(p.goal) : '',
   category: classify(p.task),
   previousStatus: p.status || '',
   previousNotes: p.notes || '',
@@ -51,7 +52,7 @@ for (let i = 0; i < additions.length; i++) {
     end: row.end || '', source: 'updated-plan' });
 }
 const output = { schoolYear: '2026/2027', updatedPlan: 'school-plan-2026-2027.pdf',
-  goals: [...goals, addedGoal], rows,
+  goals: [...goals.map(g => ({...g, id:renumber(g.id)})), addedGoal].sort((a,b)=>Number(a.id)-Number(b.id)), rows,
   notice: 'السجلات السابقة محفوظة من النسخة القديمة، وتُراجع مقابل ملف الخطة المعتمد عند تحديثها.' };
 fs.writeFileSync(new URL('school-plan-data.json', root), JSON.stringify(output, null, 2));
 console.log(`Prepared ${rows.length} records and ${output.goals.length} goals`);
