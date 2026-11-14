@@ -26,13 +26,9 @@
 
   if (visitor) {
     $('backLink').href = './visitor.html';
-    $('legacyLink').classList.add('hidden');
+
     $('sourceNotice').textContent = 'نافذة الزائر: عرض واطلاع فقط. لا تتاح أدوات التعديل أو الحفظ.';
   }
-  $('legacyLink').addEventListener('click', e => {
-    // Access to the original embedded plan remains available as a backup.
-    if (visitor) e.preventDefault();
-  });
 
   const esc = encodeURIComponent;
   function headers() {
