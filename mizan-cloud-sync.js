@@ -143,9 +143,9 @@
     panel.style.cssText = 'background:#f3eef9;border:1px solid #d8cce6;border-radius:12px;padding:12px 16px;margin:12px 0;direction:rtl;text-align:right;font:14px/1.8 Tahoma,Arial,sans-serif;color:#4c396a';
     status = el('div', '☁️ يجري تهيئة المزامنة…');
     panel.append(status);
-    const actions = doc.querySelector('.actions');
-    const container = actions?.closest('.topbar') || doc.querySelector('#content')?.parentElement || doc.body;
-    container.parentNode.insertBefore(panel, container.nextSibling);
+    const summary = doc.querySelector('#stats');
+    if (summary?.parentNode) summary.parentNode.insertBefore(panel, summary);
+    else doc.body.insertBefore(panel, doc.body.firstChild);
     const login = el('button', 'دخول الإدارة السحابية');
     login.type = 'button';
     login.style.cssText = 'background:#70558d;color:#fff;border:0;border-radius:9px;padding:7px 12px;cursor:pointer;font:inherit;margin:5px';
