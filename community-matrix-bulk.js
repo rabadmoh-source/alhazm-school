@@ -17,6 +17,14 @@ const RULES=[
  [/الصدقة|السلة الرمضانية|اليتيم|كسوة|القرآن/u,'تعزيز القيم والمواطنة والهوية العُمانية','تعزيز قيم التكافل والتطوع والمشاركة في الأعمال المجتمعية.'],
  [/تقرير|تكريم المجلس|منجزات المجلس/u,'تفعيل الشراكة الأسرية والمجتمعية','تعزيز توثيق أعمال المجلس وتقويم فاعلية مشاركته في دعم المدرسة.']
 ];
+const CATEGORIES=['التكافل المجتمعي','التوعية','دعم التعلم','التوثيق والمتابعة'];
+function suggestCategory(title){
+ if(/تقرير|توثيق|منجزات المجلس|تكريم المجلس|متابعة المجلس/u.test(title))return 'التوثيق والمتابعة';
+ if(/السلة الرمضانية|كسوة|اليتيم|الصدقة|تطوع/u.test(title))return 'التكافل المجتمعي';
+ if(/قراءة|اللغة العربية|المكتبة|مصادر التعلم|التفوق|النجاح|الدراسة|الصف الأول|الابتكار|مسابقة|القرآن/u.test(title))return 'دعم التعلم';
+ if(/توعية|صحة|الهوية|القيم|قيمنا|قيمي|ثقافة|المرورية|السلامة|الماء|البيئة|الأرض|السمنة|السرطان|التوحد|الأجهزة|التدوير/u.test(title))return 'التوعية';
+ return '';
+}
 function suggest(text){
  const match=RULES.find(([re])=>re.test(text));
  return match?[match[1],match[2]]:['تفعيل الشراكة الأسرية والمجتمعية','تعزيز مشاركة الأسرة والمجتمع في دعم الأنشطة المدرسية.'];
@@ -73,7 +81,7 @@ async function openBulk(host){
   box.append(el('h2','✨ مراجعة الترابط المقترح للإجراءات الـ37'));
   box.append(el('p','الاقتراحات للمراجعة فقط. يمكنك تعديلها أو إلغاء تحديد أي صف؛ لن يُحفظ شيء حتى تضغطي «اعتماد المحدد». ولا يُضاف أثر متحقق تلقائيًا.'));
   const scroll=el('div',undefined,'hazm-bulk-scroll'),table=el('table'),thead=el('thead'),hr=el('tr');
-  for(const t of ['اعتماد','الإجراء','الهدف الإجرائي المقترح','الأثر المستهدف المقترح','الدليل المرتبط (اختياري)'])hr.append(el('th',t));
+  for(const t of ['اعتماد','الإجراء','تصنيف الإجراء','الهدف الإجرائي المقترح','الأثر المستهدف المقترح','الدليل المرتبط (اختياري)'])hr.append(el('th',t));
   thead.append(hr);table.append(thead);
   const tbody=el('tbody'),entries=[];
   actions.forEach((a,i)=>{
@@ -83,15 +91,18 @@ async function openBulk(host){
    check.checked=!a.proceduralGoal||!a.targetImpact;
    const cell0=el('td');cell0.append(check,el('small',String(i+1)));tr.append(cell0);
    tr.append(el('td',title));
-   const goal=el('textarea'),impact=el('textarea'),related=el('select');
+   const category=el('select'),goal=el('textarea'),impact=el('textarea'),related=el('select');
+   category.append(new Option('اختاري التصنيف',''));
+   CATEGORIES.forEach(x=>category.append(new Option(x,x)));
+   category.value=a.matrixCategory||suggestCategory(title);
    goal.value=a.proceduralGoal||sGoal;impact.value=a.targetImpact||sImpact;
    related.append(new Option('لا يوجد ربط معتمد',''));
    evidences.forEach(e=>related.append(new Option(e.title,e.id)));
    related.value=a.matrixEvidenceId||'';
    const exact=evidences.filter(e=>e.rawTitle&&title.includes(e.rawTitle));
    if(!related.value&&exact.length===1)related.value=exact[0].id;
-   for(const input of [goal,impact,related]){const td=el('td');td.append(input);tr.append(td);}
-   tbody.append(tr);entries.push({i,title,check,goal,impact,related});
+   for(const input of [category,goal,impact,related]){const td=el('td');td.append(input);tr.append(td);}
+   tbody.append(tr);entries.push({i,title,check,category,goal,impact,related});
   });
   table.append(tbody);scroll.append(table);box.append(scroll);
   const foot=el('div',undefined,'hazm-bulk-controls'),cancel=el('button','إلغاء','secondary'),toggle=el('button','تحديد جميع الصفوف','secondary'),save=el('button','اعتماد المحدد وحفظه');
@@ -116,7 +127,7 @@ async function openBulk(host){
     const nextList=list.map((a,i)=>{
      const entry=selectedMap.get(i);if(!entry)return a;
      const evidence=evidences.find(e=>e.id===entry.related.value);
-     return {...a,proceduralGoal:entry.goal.value.trim(),targetImpact:entry.impact.value.trim(),
+     return {...a,matrixCategory:entry.category.value,proceduralGoal:entry.goal.value.trim(),targetImpact:entry.impact.value.trim(),
       matrixEvidenceId:evidence?.id||'',matrixEvidenceTitle:evidence?.title||''};
     });
     const payload={...latest.payload,actions:nextList};
