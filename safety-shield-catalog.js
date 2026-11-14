@@ -7,6 +7,7 @@ const el=(tag,text,cls)=>{const x=document.createElement(tag);if(text!==undefine
 const statusFor=(description,posts)=>{
  const text=[description||'',...posts.map(p=>p.body||'')].join('\n');
  if(/(?:الأثر\s+(?:المتحقق|الفعلي)\s*[:：]|نتائج\s+قياس\s+الأثر\s*[:：]|أثر متحقق موثق)/u.test(text))return ['متحقق','actual'];
+ if(posts.length)return ['شواهد موثقة','documented'];
  if(/الأثر\s+(?:المستهدف|المتوقع)\s*[:：]/u.test(text))return ['مستهدف','target'];
  return ['بانتظار التوثيق','pending'];
 };
@@ -34,7 +35,7 @@ async function load(){
   const tableWrap=el('div',undefined,'catalogTableWrap'),table=el('table',undefined,'catalogTable');
   const thead=el('thead'),headRow=el('tr');for(const title of ['م','البرنامج / الجولة','القسم','حالة الأثر','التوثيق'])headRow.append(el('th',title));thead.append(headRow);table.append(thead);
   const tbody=el('tbody');table.append(tbody);tableWrap.append(table);wrapper.append(tableWrap);
-  const footer=el('p','ملاحظة: حالة «مستهدف» لا تعني أن النتيجة تحققت بالفعل. افتحي التوثيق للاطلاع على الأدلة.','catalogFoot');wrapper.append(footer);
+  const footer=el('p','ملاحظة: «شواهد موثقة» تعني وجود توثيق منشور، ولا تعني تحقق الأثر النهائي. يظهر «متحقق» فقط عند تسجيل نتيجة قياس الأثر صراحة.','catalogFoot');wrapper.append(footer);
   const draw=()=>{tbody.replaceChildren();const keyword=search.value.trim().toLocaleLowerCase('ar'),chosen=select.value;
    const filtered=rows.filter(r=>(!chosen||r.section===chosen)&&(!keyword||(r.title||'').toLocaleLowerCase('ar').includes(keyword)||r.titleSection.includes(keyword)));
    filtered.forEach((r,i)=>{const tr=el('tr');tr.append(el('td',String(i+1)),el('td',r.title||'دون عنوان'),el('td',r.titleSection));
