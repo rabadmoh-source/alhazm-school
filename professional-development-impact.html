@@ -18,6 +18,7 @@
 const ROOT='https://fmmilquujleokfxcbnas.supabase.co',KEY='sb_publishable_O_JqIM-VqzdGgU8VTvhRHQ_eQ9eTH5R',LOCAL='hazm_pd_impact_v1';
 const fields=['date','method','practice','application','results','teacherEffect','studentEffect','evidence','recommendations'];
 const $=id=>document.getElementById(id),visitor=new URLSearchParams(location.search).get('visitor')==='1';
+if(visitor){const a=document.querySelector('header a');if(a)a.href='./professional-development-home.html?visitor=1'}
 let token=visitor?'':sessionStorage.getItem('hazm_board_access')||'',admin=false,programs=[],rows=[],local={};
 try{const v=JSON.parse(localStorage.getItem(LOCAL)||'{}');if(v&&typeof v==='object'&&!Array.isArray(v))local=v}catch{}
 async function api(path,opt={}){const r=await fetch(ROOT+path,{...opt,headers:{apikey:KEY,...(token?{Authorization:'Bearer '+token}:{}),...(opt.headers||{})}});const data=await r.json().catch(()=>null);if(!r.ok)throw Error(data?.message||data?.error||'HTTP '+r.status);return data}
