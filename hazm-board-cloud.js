@@ -15,13 +15,13 @@ const section=isSafetyBoard?'safety_'+validSafetyKey:isPartnershipBoard?'communi
 const boardName=isSafetyBoard?safetySections[validSafetyKey]:isPartnershipBoard?'الشراكات المجتمعية':isCommunityInitiativesBoard?'المبادرات المجتمعية':isDevelopmentBoard?'توثيق الإنماء المهني':null;
 const visitorMode=new URLSearchParams(location.search).get('visitor')==='1';
 if(isStandaloneBoard){
- const tabs=document.querySelector('.tabs');if(tabs){const back=document.getElementById('backToPortal');if(back)back.href=isSafetyBoard?'./safety-shield.html':(new URLSearchParams(location.search).get('visitor')==='1'?'./visitor.html':'./index.html');}
+ const tabs=document.querySelector('.tabs');if(tabs){const back=document.getElementById('backToPortal');if(back)back.href=isSafetyBoard?(visitorMode?'../safety-visitor.html':'../safety-shield.html'):(new URLSearchParams(location.search).get('visitor')==='1'?'./visitor.html':'./index.html');}
 }
 if(visitorMode){
  const a=document.getElementById('activitiesTab'),i=document.getElementById('initiativesTab'),back=document.getElementById('backToPortal');
  if(a)a.href='?type=activities&visitor=1';
  if(i)i.href='?type=initiatives&visitor=1';
- if(back)back.href=isSafetyBoard?'./safety-shield.html':'./visitor.html';
+ if(back)back.href=isSafetyBoard?(visitorMode?'../safety-visitor.html':'../safety-shield.html'):'./visitor.html';
  const heading=document.querySelector('header h1');
  if(heading)heading.textContent=boardName?'💜 '+boardName+' — عرض الزوار':'💜 لوحة الحزم | الأنشطة والمبادرات — عرض الزوار';
 }
