@@ -117,8 +117,15 @@
       for(let i=0;i<actions.length;i++) {
         const item=actions[i],tr=node('tr');
         tr.append(node('td',String(i+1)));
-        tr.append(node('td',display(item,actionKeys,'إجراء محفوظ رقم '+(i+1))));
-        const goalText=field(item,goalKeys),effectText=field(item,effectKeys);
+        const evidenceTitle=field(item,['matrixEvidenceTitle']);
+        const actionCell=node('td',display(item,actionKeys,'إجراء محفوظ رقم '+(i+1)));
+        if(evidenceTitle)actionCell.append(node('div','🔗 دليل مرتبط: '+evidenceTitle,'m-muted'));
+        tr.append(actionCell);
+        const goalText=field(item,goalKeys);
+        const measured=field(item,['measuredImpact','measured_impact']);
+        const targeted=field(item,['targetImpact']);
+        const legacyEffect=field(item,effectKeys);
+        const effectText=measured?'أثر متحقق: '+measured:(targeted?'أثر مستهدف: '+targeted:legacyEffect);
         tr.append(node('td',goalText||'لم يُحدد في السجل',goalText?'':'m-empty'));
         tr.append(node('td',effectText||'لم يُربط أثر موثق',effectText?'':'m-empty'));
         tbody.append(tr);
