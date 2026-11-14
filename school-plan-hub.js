@@ -23,6 +23,10 @@
   let selected = null;
   let admin = false;
   let authenticatedUser = null;
+  const EVIDENCE_BUCKET = 'hazm-plan-evidence';
+  const MAX_EVIDENCE_BYTES = 10 * 1024 * 1024;
+  let stagedAttachments = [];
+  let uploadingEvidence = false;
 
   if (visitor) {
     $('backLink').href = './visitor.html';
@@ -333,6 +337,53 @@
     $('save').classList.toggle('hidden', !admin);
     $('modal').classList.remove('hidden');
   }
+  async function openEvidenceAttachment(file) {
+    if (!file?.path) return;
+    const buttonStatus=$('monthlyUploadStatus');
+    buttonStatus.textContent='جارٍ تجهيز رابط آمن للمرفق...';
+    try {
+      const response=await fetch(SUPABASE+'/storage/v1/object/sign/'+EVIDENCE_BUCKET+'/'+file.path.split('/').map(encodeURIComponent).join('/'),{
+        method:'POST',headers:{...headers(),'Content-Type':'application/json'},
+        body:JSON.stringify({expiresIn:600})
+      });
+      if (!response.ok) throw Error('لا توجد صلاحية لفتح هذا الدليل ('+response.status+')');
+      const result=await response.json();
+      const signed=result.signedURL||result.signedUrl;
+      if (!signed) throw Error('تعذر إنشاء رابط العرض');
+      window.open(signed.startsWith('http')?signed:SUPABASE+'/storage/v1'+signed,'_blank','noopener,noreferrer');
+      buttonStatus.textContent='';
+    } catch(error) {buttonStatus.textContent='تعذر فتح المرفق: '+error.message;}
+  }
+  function attachmentList(container, files) {
+    container.replaceChildren();
+    for(const file of files||[]) {
+      const button=el('button','📎 '+(file.name||'مرفق'),'button outline');
+      button.type='button';button.addEventListener('click',()=>openEvidenceAttachment(file));container.append(button);
+    }
+  }
+  async function uploadEvidenceFiles(files) {
+    if (!admin || uploadingEvidence || !files.length) return;
+    const notice=$('monthlyUploadStatus');
+    uploadingEvidence=true;
+    try {
+      for (const file of files.slice(0,3)) {
+        if (file.size>MAX_EVIDENCE_BYTES) {notice.textContent='لم يُرفع «'+file.name+'»: تجاوز 10 ميجابايت.';continue;}
+        if (!/\.(jpe?g|png|webp|gif|pdf|docx?|xlsx?|pptx?)$/i.test(file.name)) {notice.textContent='نوع الملف غير مدعوم: '+file.name;continue;}
+        const extension=file.name.split('.').pop().toLowerCase();
+        const path=authenticatedUser.id+'/school-plan/'+selected.id+'/'+Date.now()+'-'+crypto.randomUUID()+'.'+extension;
+        notice.textContent='جارٍ رفع «'+file.name+'» إلى التخزين المستقل...';
+        try {
+          const response=await fetch(SUPABASE+'/storage/v1/object/'+EVIDENCE_BUCKET+'/'+path,{
+            method:'POST',headers:{...headers(),'Content-Type':file.type||'application/octet-stream','cache-control':'3600','x-upsert':'false'},body:file
+          });
+          if(!response.ok)throw Error('رمز '+response.status);
+          stagedAttachments.push({name:file.name,path,size:file.size,type:file.type});
+          attachmentList($('monthlyAttachments'),stagedAttachments);
+          notice.textContent='✅ رُفع «'+file.name+'». اضغطي «حفظ المتابعة الشهرية» لربطه بالسجل.';
+        } catch(error) {notice.textContent='تعذر رفع «'+file.name+'» ('+error.message+'). يمكنكِ حفظ المتابعة دون المرفق.';}
+      }
+    } finally {uploadingEvidence=false;$('monthlyFiles').value='';}
+  }
   function previousMonthlyRecords(row) {
     const history=monthHistory(merged(row));
     let container=$('monthlyHistory');
@@ -345,6 +396,8 @@
       item.append(el('div','النتيجة: '+record.assessment));
       if (record.immediate) item.append(el('div','الأثر المباشر: '+record.immediate));
       if (record.improvement) item.append(el('div','التحسين: '+record.improvement));
+      if (record.evidence) item.append(el('div','الشواهد والروابط: '+record.evidence));
+      if (record.attachments?.length) {const files=el('div',null,'history');attachmentList(files,record.attachments);item.append(files);}
       container.append(item);
     });
   }
@@ -359,6 +412,10 @@
     $('monthlyImmediate').value=entry?.immediate||'';
     $('monthlyEvidence').value=entry?.evidence||'';
     $('monthlyImprovement').value=entry?.improvement||'';
+    stagedAttachments=[];
+    $('monthlyFiles').value='';
+    $('monthlyUploadStatus').textContent='';
+    attachmentList($('monthlyAttachments'),[]);
     document.querySelectorAll('#monthlyModal input,#monthlyModal select,#monthlyModal textarea').forEach(x=>x.disabled=!admin);
     $('monthlySave').classList.toggle('hidden',!admin);
     $('monthlyModal').classList.remove('hidden');
@@ -408,8 +465,10 @@
       immediate:$('monthlyImmediate').value.trim(),
       evidence:$('monthlyEvidence').value.trim(),
       improvement:$('monthlyImprovement').value.trim(),
-      savedAt:new Date().toISOString()
+      savedAt:new Date().toISOString(),
+      attachments:[...stagedAttachments]
     };
+    if (uploadingEvidence) {alert('انتظري حتى ينتهي رفع المرفقات، أو أغلقي النافذة لاحقًا لحفظ المتابعة دونها.');return;}
     $('monthlySave').disabled=true;
     try {
       await persistRow(selected,data=>({
@@ -486,6 +545,7 @@
   $('modal').addEventListener('click', e => { if (e.target === $('modal')) $('modal').classList.add('hidden'); });
   $('save').addEventListener('click', save);
   $('monthlySave').addEventListener('click',saveMonthly);
+  $('monthlyFiles').addEventListener('change',event=>uploadEvidenceFiles([...event.target.files]));
   $('finalSave').addEventListener('click',saveFinal);
   [['monthlyCancel','monthlyModal'],['finalCancel','finalModal']].forEach(([button,modal])=>{
     $(button).addEventListener('click',()=>$(modal).classList.add('hidden'));
