@@ -166,9 +166,11 @@
   function latest(data, month=followMonth) { const records=monthHistory(data,month);return records[records.length-1]||null; }
   function dueRows() {
     const query=$('pulseSearch').value.trim().toLocaleLowerCase('ar'),filter=$('pulseFilter').value;
+    const area=$('pulseAreaFilter').value, owner=$('pulseOwnerFilter').value;
     return source.rows.filter(row=>{
       const data=merged(row),due=scheduled(row)||isOverdue(row)||monthHistory(data).length>0;
-      return due && (!query||(row.title+' '+row.owner).toLocaleLowerCase('ar').includes(query)) &&
+      return due && (!area || row.area===area) && (!owner || publicOwner(row.owner)===owner) &&
+        (!query||(row.title+' '+publicOwner(row.owner)+' '+row.area).toLocaleLowerCase('ar').includes(query)) &&
         (!filter||(filter==='unfollowed'?!latest(data):isOverdue(row)));
     });
   }
@@ -269,6 +271,8 @@
     ['allCount','doneCount','pendingCount','impactCount'].forEach((id,i)=>{$(id).parentElement.firstChild.textContent=headerNames[i]});
     document.querySelectorAll('[data-pulse]').forEach(button=>button.classList.toggle('active',button.dataset.pulse===pulseTab));
     $('followMonth').value=followMonth;
+    $('pulseAreaFilter').classList.toggle('hidden',pulseTab!=='monthly');
+    $('pulseOwnerFilter').classList.toggle('hidden',pulseTab!=='monthly');
     if (pulseTab==='monthly') pulseRowsMonthly();
     else if (pulseTab==='immediate') pulseRowsImmediate();
     else if (pulseTab==='final') pulseRowsFinal();
@@ -454,6 +458,10 @@
       for (const month of schoolMonths) $('followMonth').append(new Option(month.name,month.key));
       for (const area of [...new Set(source.rows.map(row => row.area))].filter(Boolean).sort()) {
         $('areaFilter').append(new Option(area, area));
+        $('pulseAreaFilter').append(new Option(area, area));
+      }
+      for (const owner of [...new Set(source.rows.map(row=>publicOwner(row.owner)))].filter(Boolean).sort((a,b)=>a.localeCompare(b,'ar'))) {
+        $('pulseOwnerFilter').append(new Option(owner, owner));
       }
       await verifyAdmin();
       authControl();
@@ -469,6 +477,8 @@
   $('followMonth').addEventListener('change',()=>{followMonth=$('followMonth').value;renderPulse()});
   $('pulseSearch').addEventListener('input',renderPulse);
   $('pulseFilter').addEventListener('change',renderPulse);
+  $('pulseAreaFilter').addEventListener('change',renderPulse);
+  $('pulseOwnerFilter').addEventListener('change',renderPulse);
   $('search').addEventListener('input', render);
   $('areaFilter').addEventListener('change', render);
   $('statusFilter').addEventListener('change', render);
