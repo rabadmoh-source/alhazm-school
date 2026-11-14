@@ -19,28 +19,50 @@ input,select,textarea{font:inherit;border:1px solid #cfc7da;border-radius:9px;pa
 .badge{border-radius:99px;padding:4px 9px;background:#f0ecf6;color:#685384;display:inline-block;white-space:nowrap;font-size:12px}.badge.good{background:#ddf4e9;color:#176e4e}.badge.warning{background:#fff1c9;color:#8a630d}
 .button{background:var(--teal);color:#fff;padding:8px 12px;border:0;border-radius:9px;cursor:pointer;font:700 13px Tahoma}.button.outline{background:#f2edf8;color:var(--purple)}
 .empty{text-align:center;padding:33px;color:#788092}.hidden{display:none!important}.overlay{position:fixed;inset:0;background:#20152e9c;display:grid;place-items:center;z-index:20;padding:15px}.dialog{background:#fff;border-radius:17px;padding:22px;width:min(620px,100%);max-height:90vh;overflow:auto}.dialog label{display:block;margin:12px 0}.dialog input,.dialog select,.dialog textarea{display:block;width:100%;margin-top:5px}.dialog textarea{min-height:100px}.dialog .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}.status{margin:10px 0;color:#6a597e}
+.pulse-tabs{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 16px}.pulse-tabs button{border:1px solid #c7b5d9;background:#f5effa;color:#644b83;padding:10px 14px;border-radius:11px;cursor:pointer;font:700 13px Tahoma}.pulse-tabs button.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+.pulse-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}.pulse-controls select{min-width:180px}.pulse-help{background:#e7f6f4;border-right:4px solid var(--teal);padding:11px 14px;border-radius:10px;font-size:13px}
+.record-detail{white-space:pre-wrap;max-width:420px;line-height:1.7}.history{display:grid;gap:11px}.history-item{border-right:4px solid var(--teal);background:#faf8fd;border-radius:10px;padding:12px}.history-item strong{color:var(--purple)}
 @media(max-width:830px){.shell{display:block;padding:0 10px}aside{width:100%;min-height:0;display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:14px}aside strong{width:100%;margin:0}aside button{width:calc(50% - 4px);margin:0}aside a{margin:0;width:100%}.summary{grid-template-columns:repeat(2,1fr)}header{padding:10px}header h1{font-size:16px}}
 </style></head><body>
 <header><img src="./alhazm-school-logo.png" alt="شعار الحزم"><div><h1>مرصد الحزم لمتابعة الخطة المدرسية</h1><small>مدرسة الحزم للتعليم الأساسي (1–4) · العام الدراسي 2026/2027</small></div><a id="backLink" class="back" href="./index.html">↩ العودة إلى البوابة الرئيسية</a></header>
 <div class="shell"><aside><strong>💜 متابعة الخطة المدرسية</strong>
-<button data-tab="initiatives" class="active">🌱 المبادرات المضمنة</button>
+<button data-tab="pulse" class="active">💓 نبض الخطة · المتابعة الدورية</button>
+<button data-tab="initiatives">🌱 المبادرات المضمنة</button>
 <button data-tab="development">📚 برامج الإنماء المرتبطة</button>
 <button data-tab="projects">🎯 المشاريع والفعاليات المرتبطة</button>
 <button data-tab="impact">📊 قياس الأثر</button>
 <a href="./school-plan-2026-2027.pdf" target="_blank" rel="noopener">📄 فتح الخطة المدرسية المعتمدة (PDF)</a>
 <a id="legacyLink" href="./index.html?legacyPlan=1">🗂️ سجل المتابعة السابق (للمراجعة)</a>
-</aside><main><div class="hero"><h2 id="sectionTitle">🌱 المبادرات المضمنة</h2><p id="sectionDescription">المبادرات الواردة ضمن إجراءات الخطة، مع متابعة تنفيذها وتوثيق أثرها.</p></div>
+</aside><main><div class="hero"><h2 id="sectionTitle">💓 نبض الخطة المدرسية</h2><p id="sectionDescription">متابعة شهرية للأثر المباشر وقياس الأثر النهائي في موعده.</p></div>
 <div class="summary"><div class="metric">الإجمالي<b id="allCount">0</b></div><div class="metric">تم التنفيذ<b id="doneCount">0</b></div><div class="metric">لم يكتمل التنفيذ<b id="pendingCount">0</b></div><div class="metric">تم قياس الأثر<b id="impactCount">0</b></div></div>
-<div class="panel"><div class="note" id="sourceNotice">تُستدعى البنود من سجل الخطة، وتظهر التحديثات المعتمدة في نسختي الإدارة والزوار.</div><div id="syncStatus" class="status" role="status"></div>
-<div class="filters"><input id="search" placeholder="البحث باسم المبادرة أو المنفذ أو المجال"><select id="areaFilter"><option value="">جميع المجالات</option></select><select id="statusFilter"><option value="">جميع حالات التنفيذ</option><option value="مخطط">مخطط</option><option value="تم التنفيذ">تم التنفيذ</option></select></div>
+<div class="panel" id="accessPanel"><div id="sourceNotice" class="note">البيانات مستمدة من سجل الخطة، والتحديثات المنشورة تظهر في الإدارة والزوار.</div><div id="syncStatus" class="status" role="status"></div></div>
+<section class="panel" id="pulsePanel"><div class="pulse-tabs"><button data-pulse="monthly" class="active">📅 المتابعة الشهرية</button><button data-pulse="immediate">🔍 الأثر المباشر</button><button data-pulse="final">🎯 الأثر النهائي</button><button data-pulse="report">📊 التقرير التراكمي</button></div>
+<div class="pulse-controls"><label for="followMonth">شهر المتابعة:</label><select id="followMonth"></select><input id="pulseSearch" placeholder="ابحثي عن إجراء أو منفذ"><select id="pulseFilter"><option value="">جميع المستحقات</option><option value="unfollowed">لم تُتابَع بعد</option><option value="overdue">المتأخرة فقط</option></select><span id="followHint" class="note"></span></div><p class="pulse-help" id="pulseHelp">تظهر الإجراءات المستمرة المستحقة لهذا الشهر، والإجراءات محددة المدة في موعدها فقط.</p>
+<div class="tablewrap"><table><thead id="pulseHeaders"></thead><tbody id="pulseRows"></tbody></table></div></section>
+<div class="panel" id="catalogPanel">
+<div class="filters"><input id="search" placeholder="البحث باسم المبادرة أو المنفذ أو المجال"><select id="areaFilter"><option value="">جميع المجالات</option></select><select id="statusFilter"><option value="">جميع حالات التنفيذ</option><option value="مخطط">مخطط</option><option value="جارٍ التنفيذ">جارٍ التنفيذ</option><option value="متأخر">متأخر</option><option value="تم التنفيذ">تم التنفيذ</option></select></div>
 <div class="tablewrap"><table><thead><tr><th>المبادرة / البرنامج / المشروع</th><th>المنفذ</th><th>حالة التنفيذ</th><th>حالة قياس الأثر</th><th>التوثيق والمتابعة</th></tr></thead><tbody id="rows"></tbody></table></div>
 <p class="note">البيانات السابقة محفوظة، ويمكن الاطلاع على الخطة الرسمية كاملة من زر «فتح الخطة المدرسية المعتمدة».</p></div>
 </main></div>
 <div id="modal" class="overlay hidden"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><h3 id="modalTitle">بطاقة المتابعة</h3><p id="modalGoal" class="note"></p>
-<label>حالة التنفيذ<select id="editExecution"><option value="مخطط">مخطط</option><option value="تم التنفيذ">تم التنفيذ</option></select></label>
+<label>حالة التنفيذ<select id="editExecution"><option value="مخطط">مخطط</option><option value="جارٍ التنفيذ">جارٍ التنفيذ</option><option value="متأخر">متأخر</option><option value="تم التنفيذ">تم التنفيذ</option></select></label>
 <label>حالة قياس الأثر<select id="editImpact"><option value="لم يحن موعد قياس الأثر">لم يحن موعد قياس الأثر</option><option value="حان موعد قياس الأثر">حان موعد قياس الأثر</option><option value="تم قياس الأثر">تم قياس الأثر</option></select></label>
 <label>تاريخ المتابعة<input type="date" id="editDate"></label><label>التوثيق والمتابعة<textarea id="editDocumentation" placeholder="الإنجازات والملاحظات، وروابط الأدلة غير الحساسة"></textarea></label>
 <label>نتائج قياس الأثر والتوصيات<textarea id="editResult" placeholder="يُستكمل بعد إجراء القياس"></textarea></label>
 <div class="actions"><button id="cancel" class="button outline">إغلاق</button><button id="save" class="button">حفظ التحديث ونشره</button></div></div></div>
-<script src="./school-plan-hub.js?v=20261114-admin" defer></script>
+<div id="monthlyModal" class="overlay hidden"><div class="dialog" role="dialog" aria-modal="true"><h3 id="monthlyTitle">متابعة شهرية</h3><p id="monthlyContext" class="note"></p>
+<label>نوع المتابعة<select id="monthlyFrequency"><option value="continuous">إجراء مستمر · متابعة شهرية</option><option value="once">إجراء محدد المدة · متابعة عند الاستحقاق</option></select></label>
+<label>حالة التنفيذ<select id="monthlyExecution"><option>مخطط</option><option>جارٍ التنفيذ</option><option>تم التنفيذ</option><option>متأخر</option></select></label>
+<label>نتيجة المتابعة<select id="monthlyAssessment"><option>يسير وفق الخطة</option><option>يحتاج إلى دعم</option><option>يواجه تحديات</option></select></label>
+<label>الأثر المباشر الملحوظ<textarea id="monthlyImmediate" placeholder="ما التغير الذي ظهر في الممارسة أو استجابة الطلبة؟ اكتبي ملاحظة واقعية قابلة للتحقق."></textarea></label>
+<label>الشواهد أو روابطها (اختياري)<textarea id="monthlyEvidence" placeholder="نتائج، تقارير، ملاحظات صفية أو روابط أدلة منشورة دون بيانات خاصة"></textarea></label>
+<label>الإجراء التحسيني أو الدعم المطلوب<textarea id="monthlyImprovement" placeholder="توصية مختصرة أو خطوة متابعة لاحقة"></textarea></label>
+<div class="actions"><button id="monthlyCancel" class="button outline">إغلاق</button><button id="monthlySave" class="button">حفظ المتابعة الشهرية</button></div></div></div>
+<div id="finalModal" class="overlay hidden"><div class="dialog" role="dialog" aria-modal="true"><h3 id="finalTitle">بطاقة قياس الأثر النهائي</h3><p id="finalContext" class="note"></p>
+<label>مستوى الأداء قبل التنفيذ<textarea id="finalBefore" placeholder="القياس القبلي أو خط الأساس"></textarea></label>
+<label>مستوى الأداء بعد التنفيذ<textarea id="finalAfter" placeholder="القياس البعدي أو النتيجة الموثقة"></textarea></label>
+<label>الأثر النهائي على تعلم الطلبة أو الأداء المدرسي<textarea id="finalResult" placeholder="وصفي مقدار التحسن ومدى تحقق المؤشر بالاستناد إلى الأدلة"></textarea></label>
+<label>شواهد القياس والتوصيات<textarea id="finalEvidence" placeholder="الأدلة والتوصيات، مع حماية خصوصية الطلبة"></textarea></label>
+<div class="actions"><button id="finalCancel" class="button outline">إغلاق</button><button id="finalSave" class="button">حفظ قياس الأثر النهائي</button></div></div></div>
+<script src="./school-plan-hub.js?v=20261114-pulse" defer></script>
 </body></html>
