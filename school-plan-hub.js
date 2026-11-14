@@ -558,6 +558,62 @@
   $('cancel').addEventListener('click', () => $('modal').classList.add('hidden'));
   $('modal').addEventListener('click', e => { if (e.target === $('modal')) $('modal').classList.add('hidden'); });
   $('save').addEventListener('click', save);
+
+  function reportSnapshot() {
+    const pulse=tab==='pulse', monthly=pulse&&pulseTab==='monthly';
+    const section=pulse ? ({monthly:'المتابعة الشهرية',immediate:'الأثر المباشر',final:'الأثر النهائي',report:'التقرير التراكمي'}[pulseTab]) : labels[tab][0];
+    const month=pulse?schoolMonths.find(x=>x.key===followMonth)?.name||'':'';
+    const table=pulse?$('pulseRows').closest('table'):$('rows').closest('table');
+    const header=[...table.querySelectorAll('thead th')].map(x=>x.textContent.trim());
+    const removeAction=!(pulse&&pulseTab==='report');
+    const cols=removeAction?header.slice(0,-1):header;
+    const rows=[...table.querySelectorAll('tbody tr')].map(tr=>{
+      const cells=[...tr.children];
+      if(cells.length===1 && cells[0].colSpan>1) return null;
+      return (removeAction?cells.slice(0,-1):cells).map(cell=>cell.textContent.trim().replace(/\s+/g,' '));
+    }).filter(Boolean);
+    const notes=[];
+    if(month)notes.push('شهر المتابعة: '+month);
+    if(monthly) {
+      if($('pulseAreaFilter').value)notes.push('المجال: '+$('pulseAreaFilter').value);
+      if($('pulseOwnerFilter').value)notes.push('المنفذ: '+$('pulseOwnerFilter').value);
+      if($('pulseFilter').value)notes.push('نوع العرض: '+$('pulseFilter').selectedOptions[0].textContent);
+      if($('pulseSearch').value.trim())notes.push('البحث: '+$('pulseSearch').value.trim());
+    } else if(!pulse) {
+      if($('areaFilter').value)notes.push('المجال: '+$('areaFilter').value);
+      if($('statusFilter').value)notes.push('حالة التنفيذ: '+$('statusFilter').value);
+      if($('search').value.trim())notes.push('البحث: '+$('search').value.trim());
+    }
+    return {section,cols,rows,notes,date:new Intl.DateTimeFormat('ar-OM',{dateStyle:'medium',timeZone:'Asia/Muscat'}).format(new Date())};
+  }
+  function printPlanReport() {
+    const report=reportSnapshot();
+    const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const printWindow=window.open('','_blank');
+    if(!printWindow){alert('يرجى السماح بفتح نافذة الطباعة لهذا الموقع.');return}
+    const head=report.cols.map(x=>'<th>'+escapeHtml(x)+'</th>').join('');
+    const body=report.rows.map(row=>'<tr>'+row.map(x=>'<td>'+escapeHtml(x)+'</td>').join('')+'</tr>').join('');
+    const note=report.notes.map(x=>'<span>'+escapeHtml(x)+'</span>').join(' · ');
+    printWindow.document.open();
+    printWindow.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>تقرير متابعة الخطة المدرسية</title><style>@page{size:A4 landscape;margin:12mm}body{font:12px/1.7 Tahoma,Arial,sans-serif;color:#263147}h1{color:#70558d;font-size:21px;margin-bottom:0}h2{font-size:16px;color:#168e8c;margin:4px 0 10px}.meta{margin:10px 0 16px;color:#555}table{width:100%;border-collapse:collapse;table-layout:auto}th,td{border:1px solid #cfc8dc;text-align:right;padding:7px;vertical-align:top;overflow-wrap:anywhere}th{background:#eee8f4;color:#50396e}tr:nth-child(even){background:#f8f7fb}tr{break-inside:avoid}footer{margin-top:14px;color:#888;font-size:11px}@media screen{body{max-width:1150px;margin:25px auto;padding:16px}}@media print{button{display:none}}</style></head><body><h1>مدرسة الحزم للتعليم الأساسي (1–4)</h1><h2>تقرير '+escapeHtml(report.section)+'</h2><div class="meta">'+escapeHtml(report.date)+(note?' · '+note:'')+' · عدد البنود: '+report.rows.length+'</div><table><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table><footer>مرصد الحزم لمتابعة الخطة المدرسية · تقرير مستخرج من البيانات الظاهرة وقت الطباعة</footer><script>window.addEventListener("load",()=>setTimeout(()=>window.print(),200))<\/script></body></html>');
+    printWindow.document.close();
+  }
+  function downloadPlanReport() {
+    const report=reportSnapshot();
+    const safe=value=>{
+      let s=String(value??'').replace(/\r?\n/g,' ');
+      if (/^[\s]*[=+@-]/.test(s)) s="'"+s;
+      return '"'+s.replace(/"/g,'""')+'"';
+    };
+    const csv=[['مدرسة الحزم للتعليم الأساسي (1–4)'],['تقرير '+report.section],['تاريخ الاستخراج',report.date],...report.notes.map(x=>[x]),[],report.cols,...report.rows].map(row=>row.map(safe).join(',')).join('\r\n');
+    const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='تقرير-متابعة-الخطة-'+new Date().toISOString().slice(0,10)+'.csv';document.body.append(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),30000);
+  }
+
+  $('printPlanReport').addEventListener('click',printPlanReport);
+  $('downloadPlanReport').addEventListener('click',downloadPlanReport);
   $('monthlySave').addEventListener('click',saveMonthly);
   $('monthlyFiles').addEventListener('change',event=>uploadEvidenceFiles([...event.target.files]));
   $('finalSave').addEventListener('click',saveFinal);
