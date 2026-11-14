@@ -125,6 +125,8 @@ function openService(s){
      btn.onclick=()=>{if(id==='impacts'){window.location.assign('./community-impact.html?visitor=1');return}const doc=frame.contentDocument;const target=doc?.querySelector('#nav [data-tab="'+id+'"]');if(target){target.click();syncMoved()}};
      side.append(btn);movedButtons.push(btn);
     }
+    // Keep "نظرة عامة" the first family navigation icon.
+    side.insertBefore(movedButtons[0],side.children[1]);
     // Parents' official Padlet follows the three existing family navigation buttons.
     const parentsLink=document.createElement('a');
     parentsLink.className='hazmFamilyGreenLink';
@@ -139,6 +141,16 @@ function openService(s){
       btn.classList.toggle('active',active);
       btn.setAttribute('aria-current',active?'page':'false');
      }
+     const matrixSelected=!!doc.querySelector('#nav [data-tab="matrix"]')?.classList.contains('active');
+     let matrixBack=doc.getElementById('hazmFamilyMatrixBack');
+     if(!matrixBack){
+      matrixBack=doc.createElement('button');matrixBack.id='hazmFamilyMatrixBack';matrixBack.type='button';
+      matrixBack.textContent='↩ العودة إلى التواصل والشراكة المجتمعية';
+      matrixBack.style.cssText='background:#70558d;color:white;border:0;border-radius:10px;padding:10px 15px;margin:12px 0;cursor:pointer;font:600 14px Tahoma,Arial,sans-serif';
+      doc.querySelector('main')?.prepend(matrixBack);
+      matrixBack.onclick=()=>{doc.querySelector('#nav [data-tab="overview"]')?.click();syncMoved()};
+     }
+     matrixBack.style.display=matrixSelected?'inline-block':'none';
     }
     frame.addEventListener('load',function familyMovedOnLoad(){
      if(!frame.isConnected||!document.getElementById('hazmPdSidePanel')?.contains(movedButtons[0]))return;
