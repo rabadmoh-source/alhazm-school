@@ -21,12 +21,4 @@
   if(heading){const wrap=document.createElement('div');wrap.className='hazm-visitor-indicator-wrap';wrap.append(badge);heading.parentNode.insertBefore(wrap,heading);}
   else if(target){target.append(' ',badge);}
   else{const head=document.querySelector('header')||document.querySelector('.brandbar');if(head)head.appendChild(badge);}
-  // The visitor portal uses the same read-only strategic relationship matrix as administration.
-  if (isVisitorHome && !document.querySelector('script[data-hazm-community-matrix]')) {
-    const matrixScript=document.createElement('script');
-    matrixScript.src='./community-matrix-live.js?v=20261114-strategic2';
-    matrixScript.defer=true;
-    matrixScript.dataset.hazmCommunityMatrix='1';
-    document.head.appendChild(matrixScript);
-  }
 })();
