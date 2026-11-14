@@ -122,7 +122,19 @@ async function mount(host){
   const effect=row.children[3].textContent.trim();
   if(effect.startsWith('أثر متحقق: '))action.measuredImpact=effect.slice(12);
   else if(effect.startsWith('أثر مستهدف: '))action.targetImpact=effect.slice(12);
-  btn.onclick=()=>showForm(i,action,row);
+  btn.onclick=async()=>{
+   btn.disabled=true;
+   try{
+    if(!await authorized())throw Error('سجلي الدخول إلى الإدارة السحابية أولًا.');
+    const current=await api('/rest/v1/hazm_community_state?select=payload&id=eq.main');
+    const latest=current?.[0]?.payload?.actions?.[i];
+    if(!latest||typeof latest!=='object')throw Error('تعذر قراءة الإجراء من السحابة.');
+    const originalTitle=String(latest.title||latest.name||latest.action||latest.activity||'');
+    if(originalTitle!==title)throw Error('تغير ترتيب الإجراءات؛ أعيدي فتح المصفوفة.');
+    showForm(i,{...latest},row);
+   }catch(e){alert('تعذر فتح التحرير: '+e.message)}
+   finally{btn.disabled=false}
+  };
   const badge=el('div','','matrix-evidence');badge.style.cssText='font-size:12px;color:#167a76';
   row.children[1].append(document.createElement('br'),btn,badge);
  });
