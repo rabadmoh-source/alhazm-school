@@ -69,6 +69,7 @@ const services=[
 {id:'monitor',icon:'📝',name:'الزيارات الإشرافية',desc:'الزيارات للفصلين الدراسيين ومتابعة التوصيات وأثر تطبيقها.',tags:['teachers','admin'],active:true},
 {id:'activities',icon:'🏆',name:'الأنشطة والمبادرات',desc:'توثيق الأنشطة والمبادرات بالصور والأدلة وقياس أثرها على التعلم.',tags:['teachers','parents','admin'],active:true},
 {id:'safety',icon:'🛡️',name:'درع الحزم | الأمن والسلامة',desc:'الجولات التفقدية والحارس والإخلاء ولجنة السلامة والأدلة والتقارير.',tags:['admin'],active:true},
+{id:'takatuf',icon:'🤝',name:'تكاتف الحزم | منظومة اللجان والفرق المدرسية',desc:'لوحات توثيق أعمال الفرق المدرسية وإنجازاتها وتوصياتها وشواهدها.',tags:['admin','teachers'],active:true},
 {id:'quality',icon:'📊',name:'ميزان الحزم | التقويم الذاتي والجودة',desc:'المجالات الخمسة وبنك الأدلة وخطة التحسين وجاهزية التقويم الخارجي.',tags:['admin','teachers'],active:true},
 {id:'marsad',icon:'🔎',name:'مرصد نور',desc:'متابعة التحضير في منصة نور والأنشطة الداعمة وسجل الدرجات لدى المعلمات.',tags:['admin'],active:true},
 {id:'riwaq',icon:'📖',name:'رِواق الحزم التربوي',desc:'جولات التعلم وجولات التدريس عالية الجودة ومتابعة أثر التحسين.',tags:['teachers','parents','admin'],active:true},
@@ -83,6 +84,7 @@ function openService(s){
   window.location.assign('./school-plan-hub.html');return;
  }
  if(s.id==='safety'){window.location.assign('./safety-shield.html?v=hazm-padlet-20261109-4');return;}
+ if(s.id==='takatuf'){window.location.assign('./takatuf-alhazm.html');return;}
  if(s.id==='pd'&&new URLSearchParams(window.location.search).get('pdDetail')!=='1'){
   window.location.assign('./professional-development-home.html');return;
  }
