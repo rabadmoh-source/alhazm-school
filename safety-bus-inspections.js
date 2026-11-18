@@ -2,7 +2,7 @@
 const URL='https://fmmilquujleokfxcbnas.supabase.co',KEY='sb_publishable_O_JqIM-VqzdGgU8VTvhRHQ_eQ9eTH5R',BUCKET='hazm-bus-inspections',visitor=new URLSearchParams(location.search).get('visitor')==='1';
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const categories=[['clean','نظافة الحافلة'],['seats','سلامة المقاعد'],['signage','اللوحات الإرشادية'],['fire','طفاية الحريق وتجهيزات السلامة'],['general','الحالة العامة للحافلة']];
-let token=visitor?'':sessionStorage.getItem('hazm_board_access')||'',user=null,admin=false,records=[],editing=null,oldPhotos=[];
+let token=visitor?'':sessionStorage.getItem('hazm_board_access')||'',user=null,admin=false,records=[],editing=null,oldPhotos=[],drivers=[];
 $('back').href=visitor?'./safety-visitor.html?section=inspections':'./safety-shield.html?section=inspections';
 if(visitor){$('authControls').classList.add('hidden');document.querySelector('header p').textContent+=' · نافذة الزائر (عرض فقط)'}
 for(let i=1;i<=14;i++){for(const id of ['bus','filterBus'])$(id).insertAdjacentHTML('beforeend','<option value="'+i+'">الحافلة '+i+'</option>')}
@@ -11,7 +11,15 @@ $('date').value=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Muscat'});
 const note=t=>$('message').textContent=t;
 function api(path,opts={}){let headers={'apikey':KEY,'Authorization':'Bearer '+(token||KEY),...(opts.body?{'Content-Type':'application/json'}:{}),...(opts.headers||{})};return fetch(URL+path,{...opts,headers}).then(async r=>{let t=await r.text(),v;try{v=t?JSON.parse(t):{}}catch{v=t}if(!r.ok)throw Error(v.message||v.error_description||v.error||('HTTP '+r.status));return v})}
 async function verify(){admin=false;user=null;if(!token||visitor)return;try{user=await api('/auth/v1/user');if(!user.id)throw Error('not authenticated');const rows=await api('/rest/v1/riwaq_admins?select=user_id&user_id=eq.'+encodeURIComponent(user.id));admin=Array.isArray(rows)&&rows.length>0;if(!admin)throw Error('not admin')}catch{token='';sessionStorage.removeItem('hazm_board_access');admin=false}}
-function authUi(){$('addBar').classList.toggle('hidden',!admin);if(!admin)$('formBox').classList.add('hidden');$('loginBtn').classList.toggle('hidden',admin||visitor);$('logoutBtn').classList.toggle('hidden',!admin);$('loginBox').classList.add('hidden')}
+function authUi(){$('addBar').classList.toggle('hidden',!admin);if(!admin)$('formBox').classList.add('hidden');$('loginBtn').classList.toggle('hidden',admin||visitor);$('logoutBtn').classList.toggle('hidden',!admin);$('loginBox').classList.add('hidden');renderDrivers()}
+
+async function loadDrivers(){try{drivers=await api('/rest/v1/hazm_bus_drivers?select=bus_number,driver_name&order=bus_number.asc');renderDrivers();$('driverMessage').textContent=''}catch(e){$('driverMessage').textContent='تعذر تحميل الأسماء: '+e.message}}
+function renderDrivers(){
+$('driverNumbers').innerHTML=Array.from({length:14},(_,i)=>'<th scope="col">الحافلة '+(i+1)+'</th>').join('');
+$('driverNames').innerHTML=Array.from({length:14},(_,i)=>{const n=i+1,v=drivers.find(d=>d.bus_number===n)?.driver_name||'';return '<td>'+(admin?'<input data-driver="'+n+'" maxlength="160" aria-label="اسم سائق الحافلة '+n+'" value="'+esc(v)+'" placeholder="اسم السائق / المالك">':esc(v)||'<span class="muted">لم يُسجل</span>')+'</td>'}).join('');
+$('saveDrivers').classList.toggle('hidden',!admin);
+}
+$('saveDrivers').onclick=async()=>{if(!admin)return;const btn=$('saveDrivers');btn.disabled=true;$('driverMessage').textContent='جارٍ حفظ الأسماء…';try{const rows=[...document.querySelectorAll('[data-driver]')].map(input=>({bus_number:Number(input.dataset.driver),driver_name:input.value.trim()}));await api('/rest/v1/hazm_bus_drivers?on_conflict=bus_number',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(rows)});drivers=rows;$('driverMessage').textContent='حُفظت الأسماء وظهرت للزوار بنجاح'}catch(e){$('driverMessage').textContent='تعذر الحفظ: '+e.message}finally{btn.disabled=false}};
 async function load(){try{records=await api('/rest/v1/hazm_bus_inspections?select=*&order=inspection_date.asc,created_at.asc&limit=500');render();note('')}catch(e){note('تعذر جلب سجلات التفقد: '+e.message)}}
 function render(){
 const chosenBus=$('filterBus').value,chosenMonth=$('filterMonth').value;
@@ -37,4 +45,4 @@ const checklist={};document.querySelectorAll('[data-check]').forEach(s=>checklis
 const data={bus_number:Number($('bus').value),inspection_date:$('date').value,checklist,notes:$('notes').value.trim(),action_required:$('action').value.trim(),follow_up_status:$('follow').value,photos:photoPaths,published:true,created_by:user.id,updated_at:new Date().toISOString()};
 if(editing)delete data.created_by;
 await api('/rest/v1/hazm_bus_inspections'+(editing?'?id=eq.'+editing:''),{method:editing?'PATCH':'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(data)});clearForm();await load();note('حُفظت الجولة ونُشرت في سجل الزوار بنجاح')}catch(err){note('لم تكتمل عملية الحفظ: '+err.message)}finally{btn.disabled=false}};
-(async()=>{await verify();authUi();await load()})();})();
+(async()=>{await verify();authUi();await Promise.all([load(),loadDrivers()])})();})();
