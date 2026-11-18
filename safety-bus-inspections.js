@@ -12,7 +12,7 @@ const note=t=>$('message').textContent=t;
 function api(path,opts={}){let headers={'apikey':KEY,'Authorization':'Bearer '+(token||KEY),...(opts.body?{'Content-Type':'application/json'}:{}),...(opts.headers||{})};return fetch(URL+path,{...opts,headers}).then(async r=>{let t=await r.text(),v;try{v=t?JSON.parse(t):{}}catch{v=t}if(!r.ok)throw Error(v.message||v.error_description||v.error||('HTTP '+r.status));return v})}
 async function verify(){admin=false;user=null;if(!token||visitor)return;try{user=await api('/auth/v1/user');if(!user.id)throw Error('not authenticated');const rows=await api('/rest/v1/riwaq_admins?select=user_id&user_id=eq.'+encodeURIComponent(user.id));admin=Array.isArray(rows)&&rows.length>0;if(!admin)throw Error('not admin')}catch{token='';sessionStorage.removeItem('hazm_board_access');admin=false}}
 function authUi(){$('addBar').classList.toggle('hidden',!admin);if(!admin)$('formBox').classList.add('hidden');$('loginBtn').classList.toggle('hidden',admin||visitor);$('logoutBtn').classList.toggle('hidden',!admin);$('loginBox').classList.add('hidden')}
-async function load(){try{records=await api('/rest/v1/hazm_bus_inspections?select=*&order=inspection_date.desc,created_at.desc&limit=500');render();note('')}catch(e){note('تعذر جلب سجلات التفقد: '+e.message)}}
+async function load(){try{records=await api('/rest/v1/hazm_bus_inspections?select=*&order=inspection_date.asc,created_at.asc&limit=500');render();note('')}catch(e){note('تعذر جلب سجلات التفقد: '+e.message)}}
 function render(){
 const chosenBus=$('filterBus').value,chosenMonth=$('filterMonth').value;
 const all=records.filter(r=>(!chosenBus||r.bus_number===Number(chosenBus))&&(!chosenMonth||r.inspection_date.startsWith(chosenMonth)));
