@@ -81,7 +81,7 @@ const serviceBinary={clock:document.getElementById('embedded-clock').textContent
 let activeService=null;
 function decodeEmbedded(b64){const raw=atob(b64);return new TextDecoder('utf-8').decode(Uint8Array.from(raw,c=>c.charCodeAt(0)))}
 function openService(s){
- if(s.id==='quality-minute'){window.location.assign('./daqeeqat-jawda.html?visitor='+(location.pathname.includes('visitor')?'1':'0'));return;}
+ if(s.id==='quality-minute'){window.location.assign('./daqeeqat-jawda.html');return;}
 
  if(s.id==='plan'&&new URLSearchParams(window.location.search).get('legacyPlan')!=='1'){
   window.location.assign('./school-plan-hub.html');return;
