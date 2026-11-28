@@ -32,4 +32,4 @@ function renderWheels(){if(!dashboard)return;el("wheel-status").textContent="آ�
 async function refreshDashboard(){if(busy)return;busy=true;try{const r=await fetch(ROOT+"/rest/v1/rpc/hazm_quality_visitor_dashboard",{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json"},body:"{}",cache:"no-store"});if(!r.ok)throw Error("تعذر تحميل البيانات");const d=await r.json();if(!d||!Array.isArray(d.hall)||!Array.isArray(d.wheels))throw Error("بيانات غير متاحة");if(JSON.stringify(d)!==JSON.stringify(dashboard)){dashboard=d;renderHall();renderWheels()}}catch(e){el("hall-status").textContent="⚠️ "+e.message;el("wheel-status").textContent="⚠️ "+e.message}finally{busy=false}}
 refreshDashboard();setInterval(()=>{if(!document.hidden)refreshDashboard()},3000);setInterval(()=>{if(!document.hidden&&!document.getElementById("challenges").hidden)load()},30000);
 
-</script></body></html>
+</script><script src="./hazm-visit-counter.js?v=20261128-1" defer></script></body></html>
