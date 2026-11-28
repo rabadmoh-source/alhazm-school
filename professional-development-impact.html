@@ -60,4 +60,4 @@ $('cancelLogin').onclick=()=>$('loginDialog').close();$('loginForm').onsubmit=as
 $('attachmentsInput').addEventListener('change',()=>{if(admin){dirty=true;$('message').textContent='المرفقات المختارة ستُرفع عند الحفظ.'}});$('migrateLegacy').onclick=migrateLegacy;$('program').onchange=()=>{if(dirty&&!confirm('هناك بيانات غير محفوظة. هل تريدين الانتقال إلى برنامج آخر وفقدان التغييرات؟')){$('program').value=currentProgram;return}show()};for(const f of fields){$(f).addEventListener('input',()=>{if(!admin)return;dirty=true;$('message').textContent='لديكِ تعديلات لم تُحفظ بعد. اضغطي حفظ كمسودة أو حفظ ونشر عند الانتهاء.';$('message').className='muted'})}$('impactForm').onsubmit=e=>{e.preventDefault();save(false)};$('publish').onclick=()=>save(true);$('back').onclick=()=>location.assign('./professional-development-home.html');
 init();document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!dirty)reload().catch(()=>{})});window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
 })();
-</script></body></html>
+</script><script src="./hazm-visit-counter.js?v=20261128-1" defer></script></body></html>

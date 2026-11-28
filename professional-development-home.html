@@ -39,4 +39,4 @@ async function refresh(){try{
  }catch(e){$('notice').textContent='تعذر قراءة سجل المتابعة: '+e.message;$('rows').replaceChildren(make('tr'));const td=make('td','تعذر عرض البرامج، يرجى فتح صفحة الإنماء الأصلية.');td.colSpan=5;$('rows').firstChild.append(td)}}
 $('search').addEventListener('input',render);$('statusFilter').addEventListener('change',render);$('impactFilter').addEventListener('change',render);$('linkedOnly').addEventListener('change',render);refresh();document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
 })();
-</script></body></html>
+</script><script src="./hazm-visit-counter.js?v=20261128-1" defer></script></body></html>
